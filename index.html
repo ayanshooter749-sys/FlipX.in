@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -11,14 +11,12 @@
         .card-box { background: #1e293b; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; }
         .game-card { padding: 20px; border-radius: 8px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; }
-        .c1 { background: #ef4444; } 
-        .c2 { background: #22c55e; } 
-        .c3 { background: #3b82f6; } 
-        .c4 { background: #eab308; color: #000; } 
+        .c1 { background: #ef4444; } .c2 { background: #22c55e; } .c3 { background: #3b82f6; } .c4 { background: #eab308; color: #000; } 
         .game-card:active { transform: scale(0.95); }
         input, button { width: 100%; padding: 10px; margin-top: 8px; border-radius: 5px; border: none; box-sizing: border-box; }
         input { background: #334155; color: white; }
         .btn-primary { background: #2563eb; color: white; font-weight: bold; cursor: pointer; }
+        .btn-success { background: #22c55e; color: white; font-weight: bold; cursor: pointer; }
         table { width: 100%; font-size: 13px; margin-top: 10px; border-collapse: collapse; }
         th, td { padding: 6px; border-bottom: 1px solid #334155; text-align: center; }
     </style>
@@ -54,7 +52,14 @@
         <div id="qr-box" style="margin: 10px 0;"></div>
         <button class="btn-primary" onclick="genQR()">Generate Payment QR Code</button>
         <input type="text" id="utr-input" placeholder="Enter UTR / Ref Number" style="display:none; margin-top:10px;">
-        <button id="submit-dep-btn" class="btn-primary" onclick="submitDeposit()" style="display:none;">Submit Deposit Request</button>
+        <button id="submit-dep-btn" class="btn-success" onclick="submitDeposit()" style="display:none;">Submit Deposit Request</button>
+    </div>
+
+    <div class="card-box">
+        <h3>Withdraw Funds (Min ₹100)</h3>
+        <input type="number" id="wd-amt" placeholder="Enter Withdrawal Amount" min="100">
+        <input type="text" id="wd-upi" placeholder="Enter your UPI ID (e.g. number@paytm)">
+        <button class="btn-primary" onclick="requestWithdrawal()">Request Withdrawal</button>
     </div>
 
     <div class="card-box">
@@ -78,7 +83,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Safe key for firebase (replacing dots and special chars in email)
         function getSafeKey(email) {
             return email.replace(/[@.]/g, "_");
         }
@@ -177,8 +181,28 @@
             let utr = document.getElementById("utr-input").value;
             if(!utr) return alert("Enter UTR number");
             let finalAmt = amt * 0.99;
-            db.ref("deposits/" + Date.now()).set({ user: currentUserEmail, amount: finalAmt, utr: utr, status: "Pending" });
-            alert("Deposit request submitted!");
+            
+            db.ref("deposits").push({ user: currentUserEmail, amount: finalAmt, utr: utr, status: "Pending" });
+            alert("Deposit request submitted successfully!");
+            document.getElementById("utr-input").value = "";
+        }
+
+        function requestWithdrawal() {
+            let amt = parseFloat(document.getElementById("wd-amt").value);
+            let upi = document.getElementById("wd-upi").value.trim();
+            if(!amt || amt < 100) return alert("Minimum withdrawal is ₹100");
+            if(!upi) return alert("Enter your UPI ID");
+
+            db.ref("users/" + currentUserKey + "/balance").once("value", (snap) => {
+                let bal = snap.val() || 0;
+                if(bal < amt) return alert("Insufficient balance for withdrawal!");
+
+                db.ref("users/" + currentUserKey + "/balance").set(bal - amt);
+                db.ref("withdrawals").push({ user: currentUserEmail, amount: amt, upi: upi, status: "Pending" });
+                alert("Withdrawal request submitted successfully!");
+                document.getElementById("wd-amt").value = "";
+                document.getElementById("wd-upi").value = "";
+            });
         }
     </script>
 </body>
