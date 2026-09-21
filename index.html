@@ -11,10 +11,10 @@
         .card-box { background: #1e293b; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; }
         .game-card { padding: 20px; border-radius: 8px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; }
-        .c1 { background: #ef4444; } /* Red */
-        .c2 { background: #22c55e; } /* Green */
-        .c3 { background: #3b82f6; } /* Blue */
-        .c4 { background: #eab308; color: #000; } /* Yellow */
+        .c1 { background: #ef4444; } 
+        .c2 { background: #22c55e; } 
+        .c3 { background: #3b82f6; } 
+        .c4 { background: #eab308; color: #000; } 
         .game-card:active { transform: scale(0.95); }
         input, button { width: 100%; padding: 10px; margin-top: 8px; border-radius: 5px; border: none; box-sizing: border-box; }
         input { background: #334155; color: white; }
@@ -27,14 +27,14 @@
 
     <div id="auth-section" class="card-box">
         <h2>FlipX Login / Register</h2>
-        <input type="text" id="phone" placeholder="Mobile Number">
+        <input type="email" id="email" placeholder="Email Address">
         <input type="password" id="pass" placeholder="Password">
         <button class="btn-primary" onclick="loginUser()">Login / Register</button>
     </div>
 
     <div id="game-section" class="card-box" style="display:none;">
         <h3>Balance: ₹<span id="user-bal">0.00</span></h3>
-        <p>User: <span id="disp-phone"></span></p>
+        <p>User: <span id="disp-email"></span></p>
         <h3 id="timer-display" style="color: #38bdf8;">Timer: 60s</h3>
         <p id="bet-status" style="font-weight: bold; color: #facc15;"></p>
 
@@ -69,39 +69,49 @@
         const firebaseConfig = {
             apiKey: "YOUR_API_KEY",
             authDomain: "YOUR_AUTH_DOMAIN",
-            databaseURL: "YOUR_DATABASE_URL",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
+            databaseURL: "https://flipx-in-default-rtdb.firebaseio.com",
+            projectId: "flipx-in",
+            storageBucket: "flipx-in.appspot.com",
             messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
             appId: "YOUR_APP_ID"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let currentUser = localStorage.getItem("flipx_user");
-        if(currentUser) {
+        // Safe key for firebase (replacing dots and special chars in email)
+        function getSafeKey(email) {
+            return email.replace(/[@.]/g, "_");
+        }
+
+        let currentUserEmail = localStorage.getItem("flipx_user_email");
+        let currentUserKey = localStorage.getItem("flipx_user_key");
+
+        if(currentUserEmail) {
             document.getElementById("auth-section").style.display = "none";
             document.getElementById("game-section").style.display = "block";
-            document.getElementById("disp-phone").innerText = currentUser;
+            document.getElementById("disp-email").innerText = currentUserEmail;
             loadUserData();
         }
 
         function loginUser() {
-            let p = document.getElementById("phone").value;
+            let email = document.getElementById("email").value.trim();
             let pass = document.getElementById("pass").value;
-            if(!p || !pass) return alert("Enter details");
-            localStorage.setItem("flipx_user", p);
-            currentUser = p;
-            db.ref("users/" + p).once("value", (snap) => {
+            if(!email || !pass) return alert("Please enter email and password");
+            
+            let userKey = getSafeKey(email);
+            localStorage.setItem("flipx_user_email", email);
+            localStorage.setItem("flipx_user_key", userKey);
+            
+            db.ref("users/" + userKey).once("value", (snap) => {
                 if(!snap.exists()) {
-                    db.ref("users/" + p).set({ balance: 0, password: pass });
+                    db.ref("users/" + userKey).set({ email: email, balance: 0, password: pass });
                 }
             });
             location.reload();
         }
 
         function loadUserData() {
-            db.ref("users/" + currentUser).on("value", (snap) => {
+            db.ref("users/" + currentUserKey).on("value", (snap) => {
                 if(snap.exists()) {
                     document.getElementById("user-bal").innerText = (snap.val().balance || 0).toFixed(2);
                 }
@@ -116,12 +126,12 @@
                 let timeLeft = snap.val() || 60;
                 if(timeLeft <= 5) return alert("Betting closed for current round!");
 
-                db.ref("users/" + currentUser + "/balance").once("value", (bSnap) => {
+                db.ref("users/" + currentUserKey + "/balance").once("value", (bSnap) => {
                     let bal = bSnap.val() || 0;
                     if(bal < amt) return alert("Insufficient balance!");
 
-                    db.ref("users/" + currentUser + "/balance").set(bal - amt);
-                    db.ref("bets/" + currentUser + "_" + Date.now()).set({ choice: choice, amount: amt });
+                    db.ref("users/" + currentUserKey + "/balance").set(bal - amt);
+                    db.ref("bets/" + currentUserKey + "_" + Date.now()).set({ choice: choice, amount: amt, user: currentUserEmail });
                     
                     db.ref("pools/" + choice).transaction((currentVal) => {
                         return (currentVal || 0) + amt;
@@ -167,7 +177,7 @@
             let utr = document.getElementById("utr-input").value;
             if(!utr) return alert("Enter UTR number");
             let finalAmt = amt * 0.99;
-            db.ref("deposits/" + Date.now()).set({ user: currentUser, amount: finalAmt, utr: utr, status: "Pending" });
+            db.ref("deposits/" + Date.now()).set({ user: currentUserEmail, amount: finalAmt, utr: utr, status: "Pending" });
             alert("Deposit request submitted!");
         }
     </script>
