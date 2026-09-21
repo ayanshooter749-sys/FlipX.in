@@ -1,275 +1,175 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FlipX - Color Prediction Game</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
-        body { background: #0b0e14; color: #ffffff; padding: 15px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 420px; }
-        
-        .card { background: #151c2c; border: 1px solid #1e293b; border-radius: 16px; padding: 20px; margin-bottom: 15px; }
-        .header-card { background: linear-gradient(135deg, #1e2640, #111827); border: 1px solid #2d3748; text-align: center; }
-        .balance-title { font-size: 13px; color: #a0aec0; text-transform: uppercase; }
-        .balance-amount { font-size: 32px; font-weight: 700; color: #38bdf8; margin-top: 5px; }
-        .user-tag { font-size: 12px; color: #10b981; margin-top: 5px; font-weight: 600; }
-
-        .auth-box { display: block; }
-        .game-box { display: none; }
-        
-        .timer-box { background: #0f172a; padding: 10px 20px; border-radius: 30px; display: inline-block; font-size: 18px; font-weight: 600; color: #f59e0b; border: 1px solid #334155; margin-bottom: 15px; }
-        
-        .bet-buttons { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; }
-        .btn-bet { flex: 1; padding: 14px 0; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; color: #fff; cursor: pointer; transition: transform 0.2s; text-transform: uppercase; }
-        .btn-bet:active { transform: scale(0.95); }
-        .btn-red { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
-        .btn-green { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
-        .btn-violet { background: linear-gradient(135deg, #8b5cf6, #7c3aed); box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4); }
-        
-        input { width: 100%; padding: 14px; background: #0f172a; border: 1px solid #334155; border-radius: 10px; color: #fff; font-size: 15px; margin-bottom: 10px; outline: none; }
-        input:focus { border-color: #38bdf8; }
-        
-        .btn-action { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: 600; font-size: 16px; cursor: pointer; color: #fff; background: linear-gradient(135deg, #2563eb, #1d4ed8); }
-        
-        #qrContainer { display: none; text-align: center; background: #0f172a; padding: 15px; border-radius: 12px; margin-top: 15px; border: 1px dashed #334155; }
-        #qrContainer img { width: 180px; height: 180px; border-radius: 10px; margin-bottom: 10px; border: 2px solid #38bdf8; }
-
-        .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-        .history-table th, .history-table td { padding: 8px; text-align: center; border-bottom: 1px solid #1e293b; }
-        .badge { padding: 4px 10px; border-radius: 12px; font-weight: 600; }
-        .bg-red { background: #ef4444; }
-        .bg-green { background: #10b981; }
-        .bg-violet { background: #8b5cf6; }
-    </style>
+    <title>FlipX - 4 Card Prediction Game</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; margin: 0; padding: 15px; text-align: center; }
+        .card-box { background: #1e293b; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; }
+        .game-card { padding: 20px; border-radius: 8px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; }
+        .c1 { background: #ef4444; } /* Red */
+        .c2 { background: #22c55e; } /* Green */
+        .c3 { background: #3b82f6; } /* Blue */
+        .c4 { background: #eab308; color: #000; } /* Yellow */
+        .game-card:active { transform: scale(0.95); }
+        input, button { width: 100%; padding: 10px; margin-top: 8px; border-radius: 5px; border: none; box-sizing: border-box; }
+        input { background: #334155; color: white; }
+        .btn-primary { background: #2563eb; color: white; font-weight: bold; cursor: pointer; }
+        table { width: 100%; font-size: 13px; margin-top: 10px; border-collapse: collapse; }
+        th, td { padding: 6px; border-bottom: 1px solid #334155; text-align: center; }
+    </style>
 </head>
 <body>
 
-<div class="container">
-
-    <!-- LOGIN / REGISTER SCREEN -->
-    <div id="authScreen" class="card auth-box">
-        <h2 style="text-align: center; color: #38bdf8; margin-bottom: 15px;">FlipX Login</h2>
-        <input type="text" id="loginPhone" placeholder="Enter Mobile Number">
-        <input type="password" id="loginPass" placeholder="Enter Password">
-        <button class="btn-action" onclick="loginUser()">Login / Register</button>
+    <div id="auth-section" class="card-box">
+        <h2>FlipX Login / Register</h2>
+        <input type="text" id="phone" placeholder="Mobile Number">
+        <input type="password" id="pass" placeholder="Password">
+        <button class="btn-primary" onclick="loginUser()">Login / Register</button>
     </div>
 
-    <!-- MAIN GAME SCREEN -->
-    <div id="gameScreen" class="game-box">
-        
-        <!-- Header Balance -->
-        <div class="card header-card">
-            <div class="balance-title">Available Game Balance</div>
-            <div class="balance-amount">₹<span id="balance">0.00</span></div>
-            <div class="user-tag">User: <span id="userPhoneDisplay"></span></div>
+    <div id="game-section" class="card-box" style="display:none;">
+        <h3>Balance: ₹<span id="user-bal">0.00</span></h3>
+        <p>User: <span id="disp-phone"></span></p>
+        <h3 id="timer-display" style="color: #38bdf8;">Timer: 60s</h3>
+        <p id="bet-status" style="font-weight: bold; color: #facc15;"></p>
+
+        <div class="cards-grid">
+            <button class="game-card c1" onclick="placeBet('Card A (4x)')">Card A<br>4x Payout</button>
+            <button class="game-card c2" onclick="placeBet('Card B (4x)')">Card B<br>4x Payout</button>
+            <button class="game-card c3" onclick="placeBet('Card C (4x)')">Card C<br>4x Payout</button>
+            <button class="game-card c4" onclick="placeBet('Card D (4x)')">Card D<br>4x Payout</button>
         </div>
-
-        <!-- Betting Card -->
-        <div class="card" style="text-align: center;">
-            <div class="timer-box">⏱️ Round Time: <span id="timer">60</span>s</div>
-            <p style="color: #94a3b8; font-size: 13px; margin-bottom: 12px;">Select color prediction to place bet:</p>
-            <div class="bet-buttons">
-                <button class="btn-bet btn-red" onclick="placeBet('Red')">Red 2x</button>
-                <button class="btn-bet btn-green" onclick="placeBet('Green')">Green 2x</button>
-                <button class="btn-bet btn-violet" onclick="placeBet('Violet')">Violet 4.5x</button>
-            </div>
-            <p id="betStatus" style="font-size: 12px; color: #38bdf8; margin-top: 10px;"></p>
-        </div>
-
-        <!-- Deposit Section -->
-        <div class="card">
-            <h3 style="margin-bottom: 10px; border-left: 4px solid #38bdf8; padding-left: 8px;">Deposit Funds</h3>
-            <input type="number" id="depAmount" placeholder="Enter Amount (Min ₹30)">
-            <p style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">⚠️ 1% Platform Handling Charge will be deducted.</p>
-            <button class="btn-action" onclick="generateQR()">Generate Payment QR Code</button>
-
-            <div id="qrContainer">
-                <p style="font-size: 13px; color: #38bdf8; margin-bottom: 10px;">Scan QR using any UPI App to Pay</p>
-                <img id="qrImg" src="" alt="Payment QR">
-                <input type="text" id="utrNo" placeholder="Enter 12-Digit UTR / Ref No">
-                <button class="btn-action" style="background: #10b981;" onclick="submitDeposit()">Submit Transaction</button>
-            </div>
-        </div>
-
-        <!-- Withdrawal Section -->
-        <div class="card">
-            <h3 style="margin-bottom: 10px; border-left: 4px solid #8b5cf6; padding-left: 8px;">Withdraw Funds</h3>
-            <input type="number" id="withAmount" placeholder="Amount (Max ₹1000)">
-            <input type="text" id="upiId" placeholder="Enter Your UPI ID (e.g. name@paytm)">
-            <button class="btn-action" style="background: #8b5cf6;" onclick="requestWithdraw()">Submit Withdrawal</button>
-        </div>
-
-        <!-- History Records Table -->
-        <div class="card">
-            <h3 style="margin-bottom: 10px; border-left: 4px solid #10b981; padding-left: 8px;">Game History</h3>
-            <table class="history-table">
-                <thead>
-                    <tr>
-                        <th>Round ID</th>
-                        <th>Result</th>
-                    </tr>
-                </thead>
-                <tbody id="historyBody">
-                    <tr><td colspan="2" style="color: #64748b;">Loading history...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
+        <input type="number" id="bet-amt" placeholder="Enter Bet Amount (₹)" min="1">
     </div>
 
-</div>
+    <div class="card-box">
+        <h3>Deposit Funds (Min ₹30)</h3>
+        <p style="font-size: 12px; color: #94a3b8;">⚠️ 1% Platform Handling Charge will be deducted.</p>
+        <input type="number" id="dep-amt" placeholder="Enter Amount (Min ₹30)" min="30">
+        <div id="qr-box" style="margin: 10px 0;"></div>
+        <button class="btn-primary" onclick="genQR()">Generate Payment QR Code</button>
+        <input type="text" id="utr-input" placeholder="Enter UTR / Ref Number" style="display:none; margin-top:10px;">
+        <button id="submit-dep-btn" class="btn-primary" onclick="submitDeposit()" style="display:none;">Submit Deposit Request</button>
+    </div>
 
-<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyCB5RCfmkEio7FQwikZzAJR8nO2YlIpnBw",
-        authDomain: "flipx-c15d5.firebaseapp.com",
-        databaseURL: "https://flipx-c15d5-default-rtdb.firebaseio.com",
-        projectId: "flipx-c15d5",
-        storageBucket: "flipx-c15d5.firebasestorage.app",
-        messagingSenderId: "1039577323994",
-        appId: "1:1039577323994:web:d9342ff195985b788c48e3",
-        measurementId: "G-4F23N3N587"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    <div class="card-box">
+        <h3>Live Game History</h3>
+        <table>
+            <thead><tr><th>Period</th><th>Winner</th></tr></thead>
+            <tbody id="history-table"></tbody>
+        </table>
+    </div>
 
-    let currentUser = localStorage.getItem('flipx_phone');
+    <script>
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
-    if (currentUser) {
-        showGame(currentUser);
-    }
-
-    function loginUser() {
-        let phone = document.getElementById('loginPhone').value.trim();
-        let pass = document.getElementById('loginPass').value.trim();
-
-        if (phone.length < 10 || pass.length < 4) {
-            alert("Please enter a valid Phone number & Password!");
-            return;
+        let currentUser = localStorage.getItem("flipx_user");
+        if(currentUser) {
+            document.getElementById("auth-section").style.display = "none";
+            document.getElementById("game-section").style.display = "block";
+            document.getElementById("disp-phone").innerText = currentUser;
+            loadUserData();
         }
 
-        db.ref('users/' + phone).once('value', snap => {
-            if (!snap.exists()) {
-                db.ref('users/' + phone).set({ password: pass, balance: 0 });
-            }
-            localStorage.setItem('flipx_phone', phone);
-            showGame(phone);
-        });
-    }
+        function loginUser() {
+            let p = document.getElementById("phone").value;
+            let pass = document.getElementById("pass").value;
+            if(!p || !pass) return alert("Enter details");
+            localStorage.setItem("flipx_user", p);
+            currentUser = p;
+            db.ref("users/" + p).once("value", (snap) => {
+                if(!snap.exists()) {
+                    db.ref("users/" + p).set({ balance: 0, password: pass });
+                }
+            });
+            location.reload();
+        }
 
-    function showGame(phone) {
-        currentUser = phone;
-        document.getElementById('authScreen').style.display = 'none';
-        document.getElementById('gameScreen').style.display = 'block';
-        document.getElementById('userPhoneDisplay').innerText = phone;
+        function loadUserData() {
+            db.ref("users/" + currentUser).on("value", (snap) => {
+                if(snap.exists()) {
+                    document.getElementById("user-bal").innerText = (snap.val().balance || 0).toFixed(2);
+                }
+            });
+        }
 
-        db.ref('users/' + phone + '/balance').on('value', snap => {
-            let val = snap.val() || 0;
-            document.getElementById('balance').innerText = parseFloat(val).toFixed(2);
-        });
+        function placeBet(choice) {
+            let amt = parseFloat(document.getElementById("bet-amt").value);
+            if(!amt || amt <= 0) return alert("Enter valid bet amount");
+            
+            db.ref("game/timer").once("value", (snap) => {
+                let timeLeft = snap.val() || 60;
+                if(timeLeft <= 5) return alert("Betting closed for current round!");
 
-        db.ref('game/timer').on('value', snap => {
-            let t = snap.val() || 0;
-            document.getElementById('timer').innerText = t;
-            if(t <= 10) {
-                document.getElementById('betStatus').innerText = "🚫 Betting Closed for current round";
-            } else {
-                document.getElementById('betStatus').innerText = "";
-            }
-        });
+                db.ref("users/" + currentUser + "/balance").once("value", (bSnap) => {
+                    let bal = bSnap.val() || 0;
+                    if(bal < amt) return alert("Insufficient balance!");
 
-        db.ref('history').limitToLast(10).on('value', snap => {
-            let body = document.getElementById('historyBody');
-            body.innerHTML = '';
-            let data = snap.val();
-            if(data) {
-                let keys = Object.keys(data).reverse();
-                keys.forEach(k => {
-                    let res = data[k].result;
-                    let colorClass = res === 'Red' ? 'bg-red' : (res === 'Green' ? 'bg-green' : 'bg-violet');
-                    body.innerHTML += `<tr><td>#${k.slice(-6)}</td><td><span class="badge ${colorClass}">${res}</span></td></tr>`;
+                    db.ref("users/" + currentUser + "/balance").set(bal - amt);
+                    db.ref("bets/" + currentUser + "_" + Date.now()).set({ choice: choice, amount: amt });
+                    
+                    db.ref("pools/" + choice).transaction((currentVal) => {
+                        return (currentVal || 0) + amt;
+                    });
+
+                    alert("Bet placed successfully on " + choice);
                 });
-            }
-        });
-    }
-
-    function placeBet(color) {
-        let t = parseInt(document.getElementById('timer').innerText);
-        if(t <= 10) {
-            alert("Betting is closed for this round! Wait for next round.");
-            return;
+            });
         }
 
-        let amt = prompt("Enter bet amount for " + color + ":");
-        amt = parseFloat(amt);
-        if (!amt || amt <= 0) return;
-
-        db.ref('users/' + currentUser + '/balance').once('value', snap => {
-            let currentBal = snap.val() || 0;
-            if (amt > currentBal) {
-                alert("Insufficient Balance! Please deposit first.");
+        db.ref("game/timer").on("value", (snap) => {
+            let t = snap.val() ?? 60;
+            document.getElementById("timer-display").innerText = "Timer: " + t + "s";
+            if(t > 5) {
+                document.getElementById("bet-status").innerText = "Betting Open (4x Payout)";
             } else {
-                db.ref('users/' + currentUser + '/balance').set(currentBal - amt);
-                db.ref('bets/' + currentUser).set({ color: color, amount: amt });
-                alert("Bet placed successfully on " + color + "!");
+                document.getElementById("bet-status").innerText = "Betting Closed - Calculating Result...";
             }
         });
-    }
 
-    function generateQR() {
-        let amt = parseFloat(document.getElementById('depAmount').value);
-        if (isNaN(amt) || amt < 30) {
-            alert("Minimum Deposit limit is ₹30!");
-            return;
-        }
-
-        let secretUpi = "7568556656@mbk"; 
-        let qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=upi://pay?pa=${secretUpi}&pn=FlipX&am=${amt}&cu=INR`;
-        
-        document.getElementById('qrImg').src = qrUrl;
-        document.getElementById('qrContainer').style.display = 'block';
-    }
-
-    function submitDeposit() {
-        let amt = parseFloat(document.getElementById('depAmount').value);
-        let utr = document.getElementById('utrNo').value.trim();
-        
-        if (utr.length < 10) { 
-            alert("Please enter a valid 12-digit UTR/Ref Number!"); 
-            return; 
-        }
-
-        db.ref('deposits').push({ userId: currentUser, amount: amt, utr: utr, status: 'Pending', time: Date.now() });
-        alert("Deposit request submitted! Admin will approve shortly.");
-        document.getElementById('qrContainer').style.display = 'none';
-        document.getElementById('depAmount').value = '';
-        document.getElementById('utrNo').value = '';
-    }
-
-    function requestWithdraw() {
-        let amt = parseFloat(document.getElementById('withAmount').value);
-        let upi = document.getElementById('upiId').value.trim();
-
-        if (isNaN(amt) || amt < 100) { alert("Minimum Withdrawal is ₹100!"); return; }
-        if (amt > 1000) { alert("Maximum Withdrawal limit is ₹1000 per request!"); return; }
-        if (!upi.includes('@')) { alert("Please enter a valid UPI ID!"); return; }
-
-        db.ref('users/' + currentUser + '/balance').once('value', snap => {
-            let currentBal = snap.val() || 0;
-            if (amt > currentBal) {
-                alert("Insufficient Balance for Withdrawal!");
-            } else {
-                db.ref('withdraws').push({ userId: currentUser, amount: amt, upi: upi, status: 'Pending', time: Date.now() });
-                alert("Withdrawal request submitted successfully!");
-                document.getElementById('withAmount').value = '';
-                document.getElementById('upiId').value = '';
-            }
+        db.ref("history").limitToLast(5).on("value", (snap) => {
+            let html = "";
+            snap.forEach((child) => {
+                let val = child.val();
+                html += `<tr><td>${val.period}</td><td style="color:#22c55e; font-weight:bold;">${val.winner}</td></tr>`;
+            });
+            document.getElementById("history-table").innerHTML = html;
         });
-    }
-</script>
+
+        function genQR() {
+            let amt = parseFloat(document.getElementById("dep-amt").value);
+            if(!amt || amt < 30) return alert("Minimum deposit is ₹30");
+            let finalAmt = amt * 0.99;
+            let upiID = "7568556656@mbk";
+            let upiLink = `upi://pay?pa=${upiID}&pn=FlipX&am=${finalAmt}&cu=INR`;
+            document.getElementById("qr-box").innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiLink)}" alt="QR"><p>Pay ₹${amt} (After 1% fee: ₹${finalAmt.toFixed(2)})</p>`;
+            document.getElementById("utr-input").style.display = "block";
+            document.getElementById("submit-dep-btn").style.display = "block";
+        }
+
+        function submitDeposit() {
+            let amt = parseFloat(document.getElementById("dep-amt").value);
+            let utr = document.getElementById("utr-input").value;
+            if(!utr) return alert("Enter UTR number");
+            let finalAmt = amt * 0.99;
+            db.ref("deposits/" + Date.now()).set({ user: currentUser, amount: finalAmt, utr: utr, status: "Pending" });
+            alert("Deposit request submitted!");
+        }
+    </script>
 </body>
 </html>
