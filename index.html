@@ -3,242 +3,167 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FlipX - 4 Card Prediction Game</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <title>FlipX Prediction Game</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; margin: 0; padding: 15px; text-align: center; }
-        .card-box { background: #1e293b; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; }
-        .game-card { padding: 20px; border-radius: 8px; border: none; font-size: 16px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; }
-        .c1 { background: #ef4444; } .c2 { background: #22c55e; } .c3 { background: #3b82f6; } .c4 { background: #eab308; color: #000; } 
-        .game-card:active { transform: scale(0.95); }
-        input, button { width: 100%; padding: 10px; margin-top: 8px; border-radius: 5px; border: none; box-sizing: border-box; }
-        input { background: #334155; color: white; }
-        .btn-primary { background: #2563eb; color: white; font-weight: bold; cursor: pointer; }
-        .btn-success { background: #22c55e; color: white; font-weight: bold; cursor: pointer; }
-        table { width: 100%; font-size: 13px; margin-top: 10px; border-collapse: collapse; }
-        th, td { padding: 6px; border-bottom: 1px solid #334155; text-align: center; }
+        body {
+            background-color: #0f172a;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .card-box {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        .btn-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .game-btn {
+            padding: 15px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-a { background-color: #ef4444; }
+        .btn-b { background-color: #22c55e; }
+        .btn-c { background-color: #3b82f6; }
+        .btn-d { background-color: #eab308; }
+        input {
+            padding: 10px;
+            width: 100%;
+            border-radius: 5px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: #fff;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        .submit-btn {
+            background: #22c55e;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            font-weight: bold;
+            border-radius: 5px;
+            width: 100%;
+            cursor: pointer;
+        }
+        .history-table {
+            width: 100%;
+            text-align: center;
+            font-size: 13px;
+            color: #94a3b8;
+        }
     </style>
 </head>
 <body>
 
-    <div id="auth-section" class="card-box">
-        <h2>FlipX Login / Register</h2>
-        <input type="email" id="email" placeholder="Email Address">
-        <input type="password" id="pass" placeholder="Password">
-        <button class="btn-primary" onclick="loginUser()">Login / Register</button>
-    </div>
-
-    <div id="game-section" class="card-box" style="display:none;">
-        <h3>Balance: ₹<span id="user-bal">0.00</span></h3>
-        <p>User: <span id="disp-email"></span></p>
-        <h3 id="timer-display" style="color: #38bdf8;">Timer: 60s</h3>
-        <p id="bet-status" style="font-weight: bold; color: #facc15;"></p>
-
-        <div class="cards-grid">
-            <button class="game-card c1" onclick="placeBet('Card A (4x)')">Card A<br>4x Payout</button>
-            <button class="game-card c2" onclick="placeBet('Card B (4x)')">Card B<br>4x Payout</button>
-            <button class="game-card c3" onclick="placeBet('Card C (4x)')">Card C<br>4x Payout</button>
-            <button class="game-card c4" onclick="placeBet('Card D (4x)')">Card D<br>4x Payout</button>
+    <div class="container">
+        <!-- Balance & User Info Header -->
+        <div class="card-box" style="text-align: center;">
+            <h3>Balance: ₹<span id="user-balance">0</span></h3>
+            <p style="font-size: 12px; color: #94a3b8; margin: 0;" id="user-email-display">User: Player</p>
+            <p style="font-size: 14px; color: #38bdf8; margin-top: 5px;">Timer: <span id="timer">60</span>s</p>
         </div>
-        <input type="number" id="bet-amt" placeholder="Enter Bet Amount (₹)" min="1">
-    </div>
 
-    <div class="card-box">
-        <h3>Deposit Funds (Min ₹30)</h3>
-        <p style="font-size: 12px; color: #94a3b8;">⚠️ 1% Platform Handling Charge will be deducted.</p>
-        <input type="number" id="dep-amt" placeholder="Enter Amount (Min ₹30)" min="30">
-        <div id="qr-box" style="margin: 10px 0;"></div>
-        <button class="btn-primary" onclick="genQR()">Generate Payment QR Code</button>
-        <input type="text" id="utr-input" placeholder="Enter UTR / Ref Number" style="display:none; margin-top:10px;">
-        <button id="submit-dep-btn" class="btn-success" onclick="submitDeposit()" style="display:none;">Submit Deposit Request</button>
-    </div>
+        <!-- Game Betting Buttons -->
+        <div class="btn-grid">
+            <button class="game-btn btn-a" onclick="placeBet('A')">Card A<br><span style="font-size:11px;">4x Payout</span></button>
+            <button class="game-btn btn-b" onclick="placeBet('B')">Card B<br><span style="font-size:11px;">4x Payout</span></button>
+            <button class="game-btn btn-c" onclick="placeBet('C')">Card C<br><span style="font-size:11px;">4x Payout</span></button>
+            <button class="game-btn btn-d" onclick="placeBet('D')">Card D<br><span style="font-size:11px;">4x Payout</span></button>
+        </div>
 
-    <div class="card-box">
-        <h3>Withdraw Funds (Min ₹100)</h3>
-        <input type="number" id="wd-amt" placeholder="Enter Withdrawal Amount" min="100">
-        <input type="text" id="wd-upi" placeholder="Enter your UPI ID (e.g. number@paytm)">
-        <button class="btn-primary" onclick="requestWithdrawal()">Request Withdrawal</button>
-    </div>
+        <!-- Single Clean Deposit Section -->
+        <div class="card-box">
+            <h3 style="margin-top: 0;">💳 Deposit Money</h3>
+            <p style="font-size: 12px; color: #94a3b8;">Enter amount and 12-digit UTR to add balance:</p>
+            
+            <input type="number" id="dep-amount" placeholder="Enter Amount (₹)">
+            <input type="text" id="dep-utr" placeholder="Enter 12-Digit UTR" maxlength="12">
+            
+            <button class="submit-btn" onclick="submitDepositLocal()">Submit Request</button>
+        </div>
 
-    <div class="card-box">
-        <h3>Live Game History</h3>
-        <table>
-            <thead><tr><th>Period</th><th>Winner</th></tr></thead>
-            <tbody id="history-table"></tbody>
-        </table>
+        <!-- Live Game History Section -->
+        <div class="card-box">
+            <h3 style="margin-top: 0; text-align: center; font-size: 15px;">Live Game History</h3>
+            <table class="history-table">
+                <tr>
+                    <th>Period</th>
+                    <th>Winner</th>
+                </tr>
+                <tr>
+                    <td colspan="2" style="padding: 10px; color: #64748b;">No history yet</td>
+                </tr>
+            </table>
+        </div>
     </div>
 
     <script>
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            databaseURL: "https://flipx-in-default-rtdb.firebaseio.com",
-            projectId: "flipx-in",
-            storageBucket: "flipx-in.appspot.com",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-
-        function getSafeKey(email) {
-            return email.replace(/[@.]/g, "_");
-        }
-
-        let currentUserEmail = localStorage.getItem("flipx_user_email");
-        let currentUserKey = localStorage.getItem("flipx_user_key");
-
-        if(currentUserEmail) {
-            document.getElementById("auth-section").style.display = "none";
-            document.getElementById("game-section").style.display = "block";
-            document.getElementById("disp-email").innerText = currentUserEmail;
-            loadUserData();
-        }
-
-        function loginUser() {
-            let email = document.getElementById("email").value.trim();
-            let pass = document.getElementById("pass").value;
-            if(!email || !pass) return alert("Please enter email and password");
+        // Load User Balance & Profile on Start
+        function updateUI() {
+            let savedBal = Number(localStorage.getItem("balance") || localStorage.getItem("flipx_balance") || 0);
+            document.getElementById("user-balance").innerText = savedBal;
             
-            let userKey = getSafeKey(email);
-            localStorage.setItem("flipx_user_email", email);
-            localStorage.setItem("flipx_user_key", userKey);
-            
-            db.ref("users/" + userKey).once("value", (snap) => {
-                if(!snap.exists()) {
-                    db.ref("users/" + userKey).set({ email: email, balance: 0, password: pass });
-                }
-            });
-            location.reload();
+            let userEmail = localStorage.getItem("flipx_user") || "Player";
+            document.getElementById("user-email-display").innerText = "User: " + userEmail;
         }
 
-        function loadUserData() {
-            db.ref("users/" + currentUserKey).on("value", (snap) => {
-                if(snap.exists()) {
-                    document.getElementById("user-bal").innerText = (snap.val().balance || 0).toFixed(2);
-                }
-            });
-        }
+        // Deposit Request Function
+        function submitDepositLocal() {
+            let amount = Number(document.getElementById("dep-amount").value);
+            let utr = document.getElementById("dep-utr").value.trim();
+            let user = localStorage.getItem("flipx_user") || "Player";
 
-        function placeBet(choice) {
-            let amt = parseFloat(document.getElementById("bet-amt").value);
-            if(!amt || amt <= 0) return alert("Enter valid bet amount");
-            
-            db.ref("game/timer").once("value", (snap) => {
-                let timeLeft = snap.val() || 60;
-                if(timeLeft <= 5) return alert("Betting closed for current round!");
-
-                db.ref("users/" + currentUserKey + "/balance").once("value", (bSnap) => {
-                    let bal = bSnap.val() || 0;
-                    if(bal < amt) return alert("Insufficient balance!");
-
-                    db.ref("users/" + currentUserKey + "/balance").set(bal - amt);
-                    db.ref("bets/" + currentUserKey + "_" + Date.now()).set({ choice: choice, amount: amt, user: currentUserEmail });
-                    
-                    db.ref("pools/" + choice).transaction((currentVal) => {
-                        return (currentVal || 0) + amt;
-                    });
-
-                    alert("Bet placed successfully on " + choice);
-                });
-            });
-        }
-
-        db.ref("game/timer").on("value", (snap) => {
-            let t = snap.val() ?? 60;
-            document.getElementById("timer-display").innerText = "Timer: " + t + "s";
-            if(t > 5) {
-                document.getElementById("bet-status").innerText = "Betting Open (4x Payout)";
-            } else {
-                document.getElementById("bet-status").innerText = "Betting Closed - Calculating Result...";
+            if (!amount || amount <= 0) {
+                alert("Kripya sahi amount dalein!");
+                return;
             }
-        });
 
-        db.ref("history").limitToLast(5).on("value", (snap) => {
-            let html = "";
-            snap.forEach((child) => {
-                let val = child.val();
-                html += `<tr><td>${val.period}</td><td style="color:#22c55e; font-weight:bold;">${val.winner}</td></tr>`;
+            if (utr.length !== 12 || isNaN(utr)) {
+                alert("Kripya 12-digit ka valid UTR number dalein!");
+                return;
+            }
+
+            let requests = JSON.parse(localStorage.getItem("flipx_requests")) || [];
+            requests.push({
+                id: Date.now(),
+                type: "Deposit",
+                user: user,
+                amount: amount,
+                detail: utr,
+                status: "Pending"
             });
-            document.getElementById("history-table").innerHTML = html;
-        });
 
-        function genQR() {
-            let amt = parseFloat(document.getElementById("dep-amt").value);
-            if(!amt || amt < 30) return alert("Minimum deposit is ₹30");
-            let finalAmt = amt * 0.99;
-            let upiID = "7568556656@mbk";
-            let upiLink = `upi://pay?pa=${upiID}&pn=FlipX&am=${finalAmt}&cu=INR`;
-            document.getElementById("qr-box").innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiLink)}" alt="QR"><p>Pay ₹${amt} (After 1% fee: ₹${finalAmt.toFixed(2)})</p>`;
-            document.getElementById("utr-input").style.display = "block";
-            document.getElementById("submit-dep-btn").style.display = "block";
-        }
-
-        function submitDeposit() {
-            let amt = parseFloat(document.getElementById("dep-amt").value);
-            let utr = document.getElementById("utr-input").value;
-            if(!utr) return alert("Enter UTR number");
-            let finalAmt = amt * 0.99;
+            localStorage.setItem("flipx_requests", JSON.stringify(requests));
+            alert("Deposit request successfully submit ho gayi hai! Admin approval ke baad balance add ho jayega.");
             
-            db.ref("deposits").push({ user: currentUserEmail, amount: finalAmt, utr: utr, status: "Pending" });
-            alert("Deposit request submitted successfully!");
-            document.getElementById("utr-input").value = "";
+            document.getElementById("dep-amount").value = "";
+            document.getElementById("dep-utr").value = "";
         }
 
-        function requestWithdrawal() {
-            let amt = parseFloat(document.getElementById("wd-amt").value);
-            let upi = document.getElementById("wd-upi").value.trim();
-            if(!amt || amt < 100) return alert("Minimum withdrawal is ₹100");
-            if(!upi) return alert("Enter your UPI ID");
-
-            db.ref("users/" + currentUserKey + "/balance").once("value", (snap) => {
-                let bal = snap.val() || 0;
-                if(bal < amt) return alert("Insufficient balance for withdrawal!");
-
-                db.ref("users/" + currentUserKey + "/balance").set(bal - amt);
-                db.ref("withdrawals").push({ user: currentUserEmail, amount: amt, upi: upi, status: "Pending" });
-                alert("Withdrawal request submitted successfully!");
-                document.getElementById("wd-amt").value = "";
-                document.getElementById("wd-upi").value = "";
-            });
+        function placeBet(card) {
+            alert("Bet placed on Card " + card);
         }
+
+        // Run UI Updater
+        updateUI();
+        setInterval(updateUI, 1000); // Har second balance check karta rahega
     </script>
 </body>
 </html>
-
-<div class="card-box" style="background: #1e293b; padding: 15px; border-radius: 10px; margin-bottom: 15px; color: #fff;">
-    <h3>💳 Deposit Money</h3>
-    <input type="number" id="dep-amount" placeholder="Enter Amount (₹)" style="padding: 10px; width: 100%; border-radius: 5px; border: 1px solid #334155; background: #0f172a; color: #fff; margin-bottom: 10px; box-sizing: border-box;">
-    <input type="text" id="dep-utr" placeholder="Enter 12-Digit UTR" maxlength="12" style="padding: 10px; width: 100%; border-radius: 5px; border: 1px solid #334155; background: #0f172a; color: #fff; margin-bottom: 10px; box-sizing: border-box;">
-    <button onclick="submitDepositLocal()" style="background: #22c55e; color: #fff; border: none; padding: 10px; font-weight: bold; border-radius: 5px; width: 100%; cursor: pointer;">Submit Request</button>
-</div>
-
-<script>
-    function submitDepositLocal() {
-        let amount = Number(document.getElementById("dep-amount").value);
-        let utr = document.getElementById("dep-utr").value.trim();
-        let user = localStorage.getItem("flipx_user") || "User_" + Math.floor(Math.random()*1000);
-
-        if (!amount || amount <= 0 || utr.length !== 12) {
-            alert("Sahi Amount aur 12-digit UTR dalein!");
-            return;
-        }
-
-        let requests = JSON.parse(localStorage.getItem("flipx_requests")) || [];
-        requests.push({
-            id: Date.now(),
-            type: "Deposit",
-            user: user,
-            amount: amount,
-            detail: utr,
-            status: "Pending"
-        });
-
-        localStorage.setItem("flipx_requests", JSON.stringify(requests));
-        alert("Request successfully submit ho gayi hai!");
-        document.getElementById("dep-amount").value = "";
-        document.getElementById("dep-utr").value = "";
-    }
-</script>
