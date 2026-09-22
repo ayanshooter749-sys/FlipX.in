@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FlipX Prediction Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body {
             background-color: #0f172a;
@@ -67,6 +68,15 @@
             cursor: pointer;
         }
         .withdraw-btn { background: #ef4444; }
+        .qr-container {
+            text-align: center;
+            background: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            display: none;
+        }
         .history-table {
             width: 100%;
             text-align: center;
@@ -104,15 +114,23 @@
         </div>
 
         <div class="card-box">
-            <h3 style="margin-top: 0;">💳 Deposit Money</h3>
-            <input type="number" id="dep-amount" placeholder="Enter Deposit Amount (₹)">
-            <input type="text" id="dep-utr" placeholder="Enter 12-Digit UTR" maxlength="12">
+            <h3 style="margin-top: 0;">💳 Deposit Money (Min ₹30)</h3>
+            <input type="number" id="dep-amount" placeholder="Enter Amount (Min ₹30)">
+            <button class="submit-btn" onclick="generateDynamicQR()">Generate Payment QR Code</button>
+
+            <div id="qr-box" class="qr-container">
+                <p style="color: #000; font-size: 13px; margin: 0 0 10px 0; font-weight: bold;">Scan & Pay via any UPI App</p>
+                <div id="qrcode" style="display: inline-block;"></div>
+                <p style="color: #333; font-size: 12px; margin: 8px 0 0 0;">UPI ID: <b>7568556656@mbk</b></p>
+            </div>
+
+            <input type="text" id="dep-utr" placeholder="Enter 12-Digit UTR Number" maxlength="12" style="margin-top: 10px;">
             <button class="submit-btn" onclick="submitDepositLocal()">Submit Deposit Request</button>
         </div>
 
         <div class="card-box">
-            <h3 style="margin-top: 0;">💸 Withdraw Money</h3>
-            <input type="number" id="wd-amount" placeholder="Withdraw Amount (₹)">
+            <h3 style="margin-top: 0;">💸 Withdraw Money (₹400 - ₹1000)</h3>
+            <input type="number" id="wd-amount" placeholder="Withdraw Amount (₹400 to ₹1000)">
             <input type="text" id="wd-upi" placeholder="Enter UPI ID (e.g. okaxis)">
             <button class="submit-btn withdraw-btn" onclick="submitWithdrawalLocal()">Request Withdrawal</button>
         </div>
@@ -134,7 +152,6 @@
     </div>
 
     <script>
-        // Game State Variables
         let timeLeft = 60;
         let periodNumber = 2026092201;
         let totalBets = { A: 0, B: 0, C: 0, D: 0 };
@@ -147,7 +164,7 @@
             document.getElementById("user-email-display").innerText = "User: " + userEmail;
         }
 
-        // Timer and Auto Winner Engine Logic
+        // Timer Logic
         function startTimer() {
             setInterval(() => {
                 timeLeft--;
@@ -156,7 +173,6 @@
                 let statusText = document.getElementById("status-text");
                 let buttons = document.querySelectorAll(".game-btn");
 
-                // Last 5 seconds mein betting band kar do
                 if (timeLeft <= 5) {
                     statusText.innerText = "(Betting Closed)";
                     statusText.style.color = "#ef4444";
@@ -167,10 +183,9 @@
                     buttons.forEach(btn => btn.disabled = false);
                 }
 
-                // Jab timer 0 ho jaye, winner declare karo
                 if (timeLeft <= 0) {
                     declareWinner();
-                    timeLeft = 60; // Timer reset
+                    timeLeft = 60;
                     periodNumber++;
                     totalBets = { A: 0, B: 0, C: 0, D: 0 };
                     userBetsThisRound = { A: 0, B: 0, C: 0, D: 0 };
@@ -178,10 +193,35 @@
             }, 1000);
         }
 
-        // Betting Logic
+        // Dynamic QR Code Generator Function
+        function generateDynamicQR() {
+            let amount = Number(document.getElementById("dep-amount").value);
+            if (!amount || amount < 30) {
+                alert("Minimum deposit amount ₹30 honi chahiye!");
+                return;
+            }
+
+            let upiId = "7568556656@mbk";
+            let upiString = `upi://pay?pa=${upiId}&pn=FlipX&am=${amount}&cu=INR`;
+
+            let qrBox = document.getElementById("qr-box");
+            let qrDiv = document.getElementById("qrcode");
+            
+            qrDiv.innerHTML = ""; // Purana QR saaf karo
+            qrBox.style.display = "block";
+
+            // Naya QR Code generate karo
+            new QRCode(qrDiv, {
+                text: upiString,
+                width: 150,
+                height: 150
+            });
+        }
+
+        // Place Bet Logic
         function placeBet(card) {
             if (timeLeft <= 5) {
-                alert("Abhi betting band ho chuki hai! Agle round ka wait karein.");
+                alert("Abhi betting band ho chuki hai!");
                 return;
             }
 
@@ -198,13 +238,11 @@
                 return;
             }
 
-            // Balance se paise cut karo
             let newBal = currentBal - betAmt;
             localStorage.setItem("balance", newBal);
             localStorage.setItem("flipx_balance", newBal);
             updateUI();
 
-            // Track bets for auto-engine
             totalBets[card] += betAmt;
             userBetsThisRound[card] += betAmt;
 
@@ -212,14 +250,12 @@
             document.getElementById("bet-amount").value = "";
         }
 
-        // Auto-Engine Winner Calculation (Jis par sabse kam ya 0 bet ho, wo jeetega)
+        // Auto Winner Engine
         function declareWinner() {
             let cards = ['A', 'B', 'C', 'D'];
-            // Jis card par sabse kam total bet lagi hai use dhoondo
             let minCard = cards.reduce((prev, curr) => totalBets[curr] < totalBets[prev] ? curr : prev);
             let winnerCard = minCard;
 
-            // Agar user ne winning card par bet lagayi thi toh 4x payout do
             if (userBetsThisRound[winnerCard] > 0) {
                 let winnings = userBetsThisRound[winnerCard] * 4;
                 let currentBal = Number(localStorage.getItem("balance") || localStorage.getItem("flipx_balance") || 0);
@@ -229,7 +265,6 @@
                 updateUI();
             }
 
-            // History table mein add karo
             let historyBody = document.getElementById("history-body");
             if (historyBody.innerHTML.includes("No history yet")) {
                 historyBody.innerHTML = "";
@@ -239,14 +274,19 @@
             historyBody.innerHTML = row + historyBody.innerHTML;
         }
 
-        // Deposit Request Function
+        // Deposit Request (Min ₹30 limit)
         function submitDepositLocal() {
             let amount = Number(document.getElementById("dep-amount").value);
             let utr = document.getElementById("dep-utr").value.trim();
             let user = localStorage.getItem("flipx_user") || "Player";
 
-            if (!amount || amount <= 0 || utr.length !== 12 || isNaN(utr)) {
-                alert("Kripya sahi amount aur valid 12-digit UTR dalein!");
+            if (!amount || amount < 30) {
+                alert("Minimum deposit amount ₹30 hai!");
+                return;
+            }
+
+            if (utr.length !== 12 || isNaN(utr)) {
+                alert("Kripya valid 12-digit UTR number dalein!");
                 return;
             }
 
@@ -262,24 +302,31 @@
 
             localStorage.setItem("flipx_requests", JSON.stringify(requests));
             alert("Deposit request submit ho gayi hai! Admin approval ka wait karein.");
+            
             document.getElementById("dep-amount").value = "";
             document.getElementById("dep-utr").value = "";
+            document.getElementById("qr-box").style.display = "none";
         }
 
-        // Withdrawal Request Function
+        // Withdrawal Request (Min ₹400 & Max ₹1000 limit)
         function submitWithdrawalLocal() {
             let amount = Number(document.getElementById("wd-amount").value);
             let upi = document.getElementById("wd-upi").value.trim();
             let user = localStorage.getItem("flipx_user") || "Player";
             let currentBal = Number(localStorage.getItem("balance") || localStorage.getItem("flipx_balance") || 0);
 
-            if (!amount || amount <= 0 || !upi) {
-                alert("Kripya sahi amount aur UPI ID dalein!");
+            if (!amount || amount < 400 || amount > 1000) {
+                alert("Withdrawal limit ₹400 se kam aur ₹1000 se zyada nahi ho sakti!");
+                return;
+            }
+
+            if (!upi) {
+                alert("Kripya apni UPI ID dalein!");
                 return;
             }
 
             if (amount > currentBal) {
-                alert("Withdrawal amount aapke current balance se zyada nahi ho sakta!");
+                alert("Aapka account balance kam hai!");
                 return;
             }
 
@@ -289,7 +336,7 @@
                 type: "Withdrawal",
                 user: user,
                 amount: amount,
-                detail: UPI,
+                detail: upi,
                 status: "Pending"
             });
 
@@ -299,7 +346,6 @@
             document.getElementById("wd-upi").value = "";
         }
 
-        // Run UI and Timer on load
         updateUI();
         startTimer();
     </script>
