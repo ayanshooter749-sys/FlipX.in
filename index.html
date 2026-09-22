@@ -42,6 +42,10 @@
         .btn-b { background-color: #22c55e; }
         .btn-c { background-color: #3b82f6; }
         .btn-d { background-color: #eab308; }
+        .game-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
         input {
             padding: 10px;
             width: 100%;
@@ -62,66 +66,177 @@
             width: 100%;
             cursor: pointer;
         }
+        .withdraw-btn { background: #ef4444; }
         .history-table {
             width: 100%;
             text-align: center;
             font-size: 13px;
             color: #94a3b8;
+            border-collapse: collapse;
+        }
+        .history-table th, .history-table td {
+            padding: 8px;
+            border-bottom: 1px solid #334155;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <!-- Balance & User Info Header -->
         <div class="card-box" style="text-align: center;">
             <h3>Balance: ₹<span id="user-balance">0</span></h3>
             <p style="font-size: 12px; color: #94a3b8; margin: 0;" id="user-email-display">User: Player</p>
-            <p style="font-size: 14px; color: #38bdf8; margin-top: 5px;">Timer: <span id="timer">60</span>s</p>
+            <p style="font-size: 15px; color: #38bdf8; margin-top: 5px; font-weight: bold;">
+                Timer: <span id="timer">60</span>s <span id="status-text" style="color: #22c55e; font-size: 12px;">(Betting Open)</span>
+            </p>
         </div>
 
-        <!-- Game Betting Buttons -->
-        <div class="btn-grid">
-            <button class="game-btn btn-a" onclick="placeBet('A')">Card A<br><span style="font-size:11px;">4x Payout</span></button>
-            <button class="game-btn btn-b" onclick="placeBet('B')">Card B<br><span style="font-size:11px;">4x Payout</span></button>
-            <button class="game-btn btn-c" onclick="placeBet('C')">Card C<br><span style="font-size:11px;">4x Payout</span></button>
-            <button class="game-btn btn-d" onclick="placeBet('D')">Card D<br><span style="font-size:11px;">4x Payout</span></button>
+        <div class="card-box">
+            <h3 style="margin-top: 0; font-size: 15px;">🎮 Place Your Bet</h3>
+            <input type="number" id="bet-amount" placeholder="Enter Bet Amount (₹)">
+            
+            <div class="btn-grid" style="margin-top: 10px; margin-bottom: 0;">
+                <button class="game-btn btn-a" id="btn-A" onclick="placeBet('A')">Card A<br><span style="font-size:11px;">4x Payout</span></button>
+                <button class="game-btn btn-b" id="btn-B" onclick="placeBet('B')">Card B<br><span style="font-size:11px;">4x Payout</span></button>
+                <button class="game-btn btn-c" id="btn-C" onclick="placeBet('C')">Card C<br><span style="font-size:11px;">4x Payout</span></button>
+                <button class="game-btn btn-d" id="btn-D" onclick="placeBet('D')">Card D<br><span style="font-size:11px;">4x Payout</span></button>
+            </div>
         </div>
 
-        <!-- Single Clean Deposit Section -->
         <div class="card-box">
             <h3 style="margin-top: 0;">💳 Deposit Money</h3>
-            <p style="font-size: 12px; color: #94a3b8;">Enter amount and 12-digit UTR to add balance:</p>
-            
-            <input type="number" id="dep-amount" placeholder="Enter Amount (₹)">
+            <input type="number" id="dep-amount" placeholder="Enter Deposit Amount (₹)">
             <input type="text" id="dep-utr" placeholder="Enter 12-Digit UTR" maxlength="12">
-            
-            <button class="submit-btn" onclick="submitDepositLocal()">Submit Request</button>
+            <button class="submit-btn" onclick="submitDepositLocal()">Submit Deposit Request</button>
         </div>
 
-        <!-- Live Game History Section -->
+        <div class="card-box">
+            <h3 style="margin-top: 0;">💸 Withdraw Money</h3>
+            <input type="number" id="wd-amount" placeholder="Withdraw Amount (₹)">
+            <input type="text" id="wd-upi" placeholder="Enter UPI ID (e.g. okaxis)">
+            <button class="submit-btn withdraw-btn" onclick="submitWithdrawalLocal()">Request Withdrawal</button>
+        </div>
+
         <div class="card-box">
             <h3 style="margin-top: 0; text-align: center; font-size: 15px;">Live Game History</h3>
             <table class="history-table">
-                <tr>
-                    <th>Period</th>
-                    <th>Winner</th>
-                </tr>
-                <tr>
-                    <td colspan="2" style="padding: 10px; color: #64748b;">No history yet</td>
-                </tr>
+                <thead>
+                    <tr>
+                        <th>Period</th>
+                        <th>Winner</th>
+                    </tr>
+                </thead>
+                <tbody id="history-body">
+                    <tr><td colspan="2" style="color: #64748b;">No history yet</td></tr>
+                </tbody>
             </table>
         </div>
     </div>
 
     <script>
-        // Load User Balance & Profile on Start
+        // Game State Variables
+        let timeLeft = 60;
+        let periodNumber = 2026092201;
+        let totalBets = { A: 0, B: 0, C: 0, D: 0 };
+        let userBetsThisRound = { A: 0, B: 0, C: 0, D: 0 };
+
         function updateUI() {
             let savedBal = Number(localStorage.getItem("balance") || localStorage.getItem("flipx_balance") || 0);
             document.getElementById("user-balance").innerText = savedBal;
-            
             let userEmail = localStorage.getItem("flipx_user") || "Player";
             document.getElementById("user-email-display").innerText = "User: " + userEmail;
+        }
+
+        // Timer and Auto Winner Engine Logic
+        function startTimer() {
+            setInterval(() => {
+                timeLeft--;
+                document.getElementById("timer").innerText = timeLeft;
+
+                let statusText = document.getElementById("status-text");
+                let buttons = document.querySelectorAll(".game-btn");
+
+                // Last 5 seconds mein betting band kar do
+                if (timeLeft <= 5) {
+                    statusText.innerText = "(Betting Closed)";
+                    statusText.style.color = "#ef4444";
+                    buttons.forEach(btn => btn.disabled = true);
+                } else {
+                    statusText.innerText = "(Betting Open)";
+                    statusText.style.color = "#22c55e";
+                    buttons.forEach(btn => btn.disabled = false);
+                }
+
+                // Jab timer 0 ho jaye, winner declare karo
+                if (timeLeft <= 0) {
+                    declareWinner();
+                    timeLeft = 60; // Timer reset
+                    periodNumber++;
+                    totalBets = { A: 0, B: 0, C: 0, D: 0 };
+                    userBetsThisRound = { A: 0, B: 0, C: 0, D: 0 };
+                }
+            }, 1000);
+        }
+
+        // Betting Logic
+        function placeBet(card) {
+            if (timeLeft <= 5) {
+                alert("Abhi betting band ho chuki hai! Agle round ka wait karein.");
+                return;
+            }
+
+            let betAmt = Number(document.getElementById("bet-amount").value);
+            let currentBal = Number(localStorage.getItem("balance") || localStorage.getItem("flipx_balance") || 0);
+
+            if (!betAmt || betAmt <= 0) {
+                alert("Kripya valid bet amount dalein!");
+                return;
+            }
+
+            if (betAmt > currentBal) {
+                alert("Aapke account mein insufficient balance hai!");
+                return;
+            }
+
+            // Balance se paise cut karo
+            let newBal = currentBal - betAmt;
+            localStorage.setItem("balance", newBal);
+            localStorage.setItem("flipx_balance", newBal);
+            updateUI();
+
+            // Track bets for auto-engine
+            totalBets[card] += betAmt;
+            userBetsThisRound[card] += betAmt;
+
+            alert(`Successfully placed ₹${betAmt} on Card ${card}!`);
+            document.getElementById("bet-amount").value = "";
+        }
+
+        // Auto-Engine Winner Calculation (Jis par sabse kam ya 0 bet ho, wo jeetega)
+        function declareWinner() {
+            let cards = ['A', 'B', 'C', 'D'];
+            // Jis card par sabse kam total bet lagi hai use dhoondo
+            let minCard = cards.reduce((prev, curr) => totalBets[curr] < totalBets[prev] ? curr : prev);
+            let winnerCard = minCard;
+
+            // Agar user ne winning card par bet lagayi thi toh 4x payout do
+            if (userBetsThisRound[winnerCard] > 0) {
+                let winnings = userBetsThisRound[winnerCard] * 4;
+                let currentBal = Number(localStorage.getItem("balance") || localStorage.getItem("flipx_balance") || 0);
+                let finalBal = currentBal + winnings;
+                localStorage.setItem("balance", finalBal);
+                localStorage.setItem("flipx_balance", finalBal);
+                updateUI();
+            }
+
+            // History table mein add karo
+            let historyBody = document.getElementById("history-body");
+            if (historyBody.innerHTML.includes("No history yet")) {
+                historyBody.innerHTML = "";
+            }
+
+            let row = `<tr><td>${periodNumber}</td><td><strong style="color: #38bdf8;">Card ${winnerCard}</strong></td></tr>`;
+            historyBody.innerHTML = row + historyBody.innerHTML;
         }
 
         // Deposit Request Function
@@ -130,13 +245,8 @@
             let utr = document.getElementById("dep-utr").value.trim();
             let user = localStorage.getItem("flipx_user") || "Player";
 
-            if (!amount || amount <= 0) {
-                alert("Kripya sahi amount dalein!");
-                return;
-            }
-
-            if (utr.length !== 12 || isNaN(utr)) {
-                alert("Kripya 12-digit ka valid UTR number dalein!");
+            if (!amount || amount <= 0 || utr.length !== 12 || isNaN(utr)) {
+                alert("Kripya sahi amount aur valid 12-digit UTR dalein!");
                 return;
             }
 
@@ -151,19 +261,47 @@
             });
 
             localStorage.setItem("flipx_requests", JSON.stringify(requests));
-            alert("Deposit request successfully submit ho gayi hai! Admin approval ke baad balance add ho jayega.");
-            
+            alert("Deposit request submit ho gayi hai! Admin approval ka wait karein.");
             document.getElementById("dep-amount").value = "";
             document.getElementById("dep-utr").value = "";
         }
 
-        function placeBet(card) {
-            alert("Bet placed on Card " + card);
+        // Withdrawal Request Function
+        function submitWithdrawalLocal() {
+            let amount = Number(document.getElementById("wd-amount").value);
+            let upi = document.getElementById("wd-upi").value.trim();
+            let user = localStorage.getItem("flipx_user") || "Player";
+            let currentBal = Number(localStorage.getItem("balance") || localStorage.getItem("flipx_balance") || 0);
+
+            if (!amount || amount <= 0 || !upi) {
+                alert("Kripya sahi amount aur UPI ID dalein!");
+                return;
+            }
+
+            if (amount > currentBal) {
+                alert("Withdrawal amount aapke current balance se zyada nahi ho sakta!");
+                return;
+            }
+
+            let requests = JSON.parse(localStorage.getItem("flipx_requests")) || [];
+            requests.push({
+                id: Date.now(),
+                type: "Withdrawal",
+                user: user,
+                amount: amount,
+                detail: UPI,
+                status: "Pending"
+            });
+
+            localStorage.setItem("flipx_requests", JSON.stringify(requests));
+            alert("Withdrawal request successfully submit ho gayi hai!");
+            document.getElementById("wd-amount").value = "";
+            document.getElementById("wd-upi").value = "";
         }
 
-        // Run UI Updater
+        // Run UI and Timer on load
         updateUI();
-        setInterval(updateUI, 1000); // Har second balance check karta rahega
+        startTimer();
     </script>
 </body>
 </html>
