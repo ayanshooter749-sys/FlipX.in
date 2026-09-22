@@ -115,13 +115,11 @@
 
         <div class="card-box">
             <h3 style="margin-top: 0;">💳 Deposit Money (Min ₹30)</h3>
-            <input type="number" id="dep-amount" placeholder="Enter Amount (Min ₹30)">
-            <button class="submit-btn" onclick="generateDynamicQR()">Generate Payment QR Code</button>
+            <input type="number" id="dep-amount" placeholder="Enter Amount (Min ₹30)" oninput="autoGenerateQR()">
 
             <div id="qr-box" class="qr-container">
                 <p style="color: #000; font-size: 13px; margin: 0 0 10px 0; font-weight: bold;">Scan & Pay via any UPI App</p>
                 <div id="qrcode" style="display: inline-block;"></div>
-                <p style="color: #333; font-size: 12px; margin: 8px 0 0 0;">UPI ID: <b>7568556656@mbk</b></p>
             </div>
 
             <input type="text" id="dep-utr" placeholder="Enter 12-Digit UTR Number" maxlength="12" style="margin-top: 10px;">
@@ -193,24 +191,24 @@
             }, 1000);
         }
 
-        // Dynamic QR Code Generator Function
-        function generateDynamicQR() {
+        // Auto QR Code Generator on typing amount
+        function autoGenerateQR() {
             let amount = Number(document.getElementById("dep-amount").value);
+            let qrBox = document.getElementById("qr-box");
+            let qrDiv = document.getElementById("qrcode");
+
             if (!amount || amount < 30) {
-                alert("Minimum deposit amount ₹30 honi chahiye!");
+                qrBox.style.display = "none";
+                qrDiv.innerHTML = "";
                 return;
             }
 
             let upiId = "7568556656@mbk";
             let upiString = `upi://pay?pa=${upiId}&pn=FlipX&am=${amount}&cu=INR`;
-
-            let qrBox = document.getElementById("qr-box");
-            let qrDiv = document.getElementById("qrcode");
             
-            qrDiv.innerHTML = ""; // Purana QR saaf karo
+            qrDiv.innerHTML = "";
             qrBox.style.display = "block";
 
-            // Naya QR Code generate karo
             new QRCode(qrDiv, {
                 text: upiString,
                 width: 150,
@@ -274,7 +272,7 @@
             historyBody.innerHTML = row + historyBody.innerHTML;
         }
 
-        // Deposit Request (Min ₹30 limit)
+        // Deposit Request Submission
         function submitDepositLocal() {
             let amount = Number(document.getElementById("dep-amount").value);
             let utr = document.getElementById("dep-utr").value.trim();
@@ -308,7 +306,7 @@
             document.getElementById("qr-box").style.display = "none";
         }
 
-        // Withdrawal Request (Min ₹400 & Max ₹1000 limit)
+        // Withdrawal Request Submission
         function submitWithdrawalLocal() {
             let amount = Number(document.getElementById("wd-amount").value);
             let upi = document.getElementById("wd-upi").value.trim();
