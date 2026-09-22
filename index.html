@@ -207,3 +207,38 @@
     </script>
 </body>
 </html>
+
+<div class="card-box" style="background: #1e293b; padding: 15px; border-radius: 10px; margin-bottom: 15px; color: #fff;">
+    <h3>💳 Deposit Money</h3>
+    <input type="number" id="dep-amount" placeholder="Enter Amount (₹)" style="padding: 10px; width: 100%; border-radius: 5px; border: 1px solid #334155; background: #0f172a; color: #fff; margin-bottom: 10px; box-sizing: border-box;">
+    <input type="text" id="dep-utr" placeholder="Enter 12-Digit UTR" maxlength="12" style="padding: 10px; width: 100%; border-radius: 5px; border: 1px solid #334155; background: #0f172a; color: #fff; margin-bottom: 10px; box-sizing: border-box;">
+    <button onclick="submitDepositLocal()" style="background: #22c55e; color: #fff; border: none; padding: 10px; font-weight: bold; border-radius: 5px; width: 100%; cursor: pointer;">Submit Request</button>
+</div>
+
+<script>
+    function submitDepositLocal() {
+        let amount = Number(document.getElementById("dep-amount").value);
+        let utr = document.getElementById("dep-utr").value.trim();
+        let user = localStorage.getItem("flipx_user") || "User_" + Math.floor(Math.random()*1000);
+
+        if (!amount || amount <= 0 || utr.length !== 12) {
+            alert("Sahi Amount aur 12-digit UTR dalein!");
+            return;
+        }
+
+        let requests = JSON.parse(localStorage.getItem("flipx_requests")) || [];
+        requests.push({
+            id: Date.now(),
+            type: "Deposit",
+            user: user,
+            amount: amount,
+            detail: utr,
+            status: "Pending"
+        });
+
+        localStorage.setItem("flipx_requests", JSON.stringify(requests));
+        alert("Request successfully submit ho gayi hai!");
+        document.getElementById("dep-amount").value = "";
+        document.getElementById("dep-utr").value = "";
+    }
+</script>
