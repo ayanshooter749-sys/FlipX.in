@@ -287,17 +287,20 @@
             document.getElementById("bet-amount").value = "";
         }
 
-        // Auto Winner Engine & History Saver
+        // Auto Winner Engine & Winnings Payout Fix
         function declareWinner() {
             let totalBets = JSON.parse(localStorage.getItem("flipx_total_bets")) || { A: 0, B: 0, C: 0, D: 0 };
             let userBetsThisRound = JSON.parse(localStorage.getItem("flipx_user_bets")) || { A: 0, B: 0, C: 0, D: 0 };
 
             let cards = ['A', 'B', 'C', 'D'];
+            // Winner selection: jo card sabse kam total bets wala ho ya random fallback
             let minCard = cards.reduce((prev, curr) => totalBets[curr] < totalBets[prev] ? curr : prev);
             let winnerCard = minCard;
 
-            if (userBetsThisRound[winnerCard] > 0) {
-                let winnings = userBetsThisRound[winnerCard] * 4;
+            // Check user bet on winning card and credit 4x payout
+            let userBetOnWinner = userBetsThisRound[winnerCard] || 0;
+            if (userBetOnWinner > 0) {
+                let winnings = userBetOnWinner * 4;
                 let currentBal = Number(localStorage.getItem("flipx_balance") || 5000);
                 let finalBal = currentBal + winnings;
                 localStorage.setItem("flipx_balance", finalBal);
@@ -353,7 +356,7 @@
             let user = localStorage.getItem("flipx_user") || "7568556656";
             let currentBal = Number(localStorage.getItem("flipx_balance") || 5000);
 
-            if (!amount || amount < 400 || amount > 1000) {
+.           if (!amount || amount < 400 || amount > 1000) {
                 alert("Withdrawal limit ₹400 se kam aur ₹1000 se zyada nahi ho sakti!");
                 return;
             }
@@ -368,7 +371,6 @@
                 return;
             }
 
-            // Deduct balance instantly on withdrawal request
             let newBal = currentBal - amount;
             localStorage.setItem("flipx_balance", newBal);
             updateUI();
@@ -393,5 +395,4 @@
         startTimer();
     </script>
 </body>
-    </html>
-    
+</html>
