@@ -121,7 +121,7 @@
             <h3 style="margin-top: 0;">💳 Deposit Money (Min ₹30)</h3>
             <input type="number" id="dep-amount" placeholder="Enter Amount (Min ₹30)" oninput="autoGenerateQR()">
 
-            <!-- Auto QR Box (UPI ID Text Hidden) -->
+            <!-- Auto QR Box -->
             <div id="qr-box" class="qr-container">
                 <p style="color: #000; font-size: 13px; margin: 0 0 10px 0; font-weight: bold;">Scan & Pay via any UPI App</p>
                 <div id="qrcode" style="display: inline-block;"></div>
@@ -162,13 +162,13 @@
         let userBetsThisRound = { A: 0, B: 0, C: 0, D: 0 };
 
         function updateUI() {
-            let savedBal = Number(localStorage.getItem("balance") || localStorage.getItem("flipx_balance") || 0);
+            let savedBal = Number(localStorage.getItem("flipx_balance") || 0);
             document.getElementById("user-balance").innerText = savedBal;
-            let userEmail = localStorage.getItem("flipx_user") || "Player";
+            let userEmail = localStorage.getItem("flipx_user") || "7568556656";
             document.getElementById("user-email-display").innerText = "User: " + userEmail;
         }
 
-        // Persistent Timer Logic (Page refresh hone par timer reset nahi hoga)
+        // Persistent Timer Logic
         function startTimer() {
             setInterval(() => {
                 let timeLeft = Number(localStorage.getItem("flipx_timer")) || 60;
@@ -235,7 +235,7 @@
             }
 
             let betAmt = Number(document.getElementById("bet-amount").value);
-            let currentBal = Number(localStorage.getItem("balance") || localStorage.getItem("flipx_balance") || 0);
+            let currentBal = Number(localStorage.getItem("flipx_balance") || 0);
 
             if (!betAmt || betAmt <= 0) {
                 alert("Kripya valid bet amount dalein!");
@@ -248,7 +248,6 @@
             }
 
             let newBal = currentBal - betAmt;
-            localStorage.setItem("balance", newBal);
             localStorage.setItem("flipx_balance", newBal);
             updateUI();
 
@@ -267,9 +266,8 @@
 
             if (userBetsThisRound[winnerCard] > 0) {
                 let winnings = userBetsThisRound[winnerCard] * 4;
-                let currentBal = Number(localStorage.getItem("balance") || localStorage.getItem("flipx_balance") || 0);
+                let currentBal = Number(localStorage.getItem("flipx_balance") || 0);
                 let finalBal = currentBal + winnings;
-                localStorage.setItem("balance", finalBal);
                 localStorage.setItem("flipx_balance", finalBal);
                 updateUI();
             }
@@ -287,7 +285,7 @@
         function submitDepositLocal() {
             let amount = Number(document.getElementById("dep-amount").value);
             let utr = document.getElementById("dep-utr").value.trim();
-            let user = localStorage.getItem("flipx_user") || "Player";
+            let user = localStorage.getItem("flipx_user") || "7568556656";
 
             if (!amount || amount < 30) {
                 alert("Minimum deposit amount ₹30 hai!");
@@ -321,8 +319,8 @@
         function submitWithdrawalLocal() {
             let amount = Number(document.getElementById("wd-amount").value);
             let upi = document.getElementById("wd-upi").value.trim();
-            let user = localStorage.getItem("flipx_user") || "Player";
-            let currentBal = Number(localStorage.getItem("balance") || localStorage.getItem("flipx_balance") || 0);
+            let user = localStorage.getItem("flipx_user") || "7568556656";
+            let currentBal = Number(localStorage.getItem("flipx_balance") || 0);
 
             if (!amount || amount < 400 || amount > 1000) {
                 alert("Withdrawal limit ₹400 se kam aur ₹1000 se zyada nahi ho sakti!");
