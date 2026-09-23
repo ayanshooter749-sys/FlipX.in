@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FlipX Prediction Game</title>
+    <!-- QR Code Generator Library CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body {
@@ -93,6 +94,7 @@
 <body>
 
     <div class="container">
+        <!-- Balance & User Info Header -->
         <div class="card-box" style="text-align: center;">
             <h3>Balance: ₹<span id="user-balance">0</span></h3>
             <p style="font-size: 12px; color: #94a3b8; margin: 0;" id="user-email-display">User: Player</p>
@@ -101,6 +103,7 @@
             </p>
         </div>
 
+        <!-- Betting Input & Game Buttons -->
         <div class="card-box">
             <h3 style="margin-top: 0; font-size: 15px;">🎮 Place Your Bet</h3>
             <input type="number" id="bet-amount" placeholder="Enter Bet Amount (₹)">
@@ -113,10 +116,12 @@
             </div>
         </div>
 
+        <!-- Deposit Section with Auto QR -->
         <div class="card-box">
             <h3 style="margin-top: 0;">💳 Deposit Money (Min ₹30)</h3>
             <input type="number" id="dep-amount" placeholder="Enter Amount (Min ₹30)" oninput="autoGenerateQR()">
 
+            <!-- Auto QR Box (UPI ID Text Hidden) -->
             <div id="qr-box" class="qr-container">
                 <p style="color: #000; font-size: 13px; margin: 0 0 10px 0; font-weight: bold;">Scan & Pay via any UPI App</p>
                 <div id="qrcode" style="display: inline-block;"></div>
@@ -126,6 +131,7 @@
             <button class="submit-btn" onclick="submitDepositLocal()">Submit Deposit Request</button>
         </div>
 
+        <!-- Withdrawal Section (Min ₹400 & Max ₹1000) -->
         <div class="card-box">
             <h3 style="margin-top: 0;">💸 Withdraw Money (₹400 - ₹1000)</h3>
             <input type="number" id="wd-amount" placeholder="Withdraw Amount (₹400 to ₹1000)">
@@ -133,6 +139,7 @@
             <button class="submit-btn withdraw-btn" onclick="submitWithdrawalLocal()">Request Withdrawal</button>
         </div>
 
+        <!-- Live Game History Section -->
         <div class="card-box">
             <h3 style="margin-top: 0; text-align: center; font-size: 15px;">Live Game History</h3>
             <table class="history-table">
@@ -150,7 +157,6 @@
     </div>
 
     <script>
-        let timeLeft = 60;
         let periodNumber = 2026092201;
         let totalBets = { A: 0, B: 0, C: 0, D: 0 };
         let userBetsThisRound = { A: 0, B: 0, C: 0, D: 0 };
@@ -162,10 +168,22 @@
             document.getElementById("user-email-display").innerText = "User: " + userEmail;
         }
 
-        // Timer Logic
+        // Persistent Timer Logic (Page refresh hone par timer reset nahi hoga)
         function startTimer() {
             setInterval(() => {
-                timeLeft--;
+                let timeLeft = Number(localStorage.getItem("flipx_timer")) || 60;
+                
+                if (timeLeft <= 0) {
+                    declareWinner();
+                    timeLeft = 60;
+                    periodNumber++;
+                    totalBets = { A: 0, B: 0, C: 0, D: 0 };
+                    userBetsThisRound = { A: 0, B: 0, C: 0, D: 0 };
+                } else {
+                    timeLeft--;
+                }
+
+                localStorage.setItem("flipx_timer", timeLeft);
                 document.getElementById("timer").innerText = timeLeft;
 
                 let statusText = document.getElementById("status-text");
@@ -179,14 +197,6 @@
                     statusText.innerText = "(Betting Open)";
                     statusText.style.color = "#22c55e";
                     buttons.forEach(btn => btn.disabled = false);
-                }
-
-                if (timeLeft <= 0) {
-                    declareWinner();
-                    timeLeft = 60;
-                    periodNumber++;
-                    totalBets = { A: 0, B: 0, C: 0, D: 0 };
-                    userBetsThisRound = { A: 0, B: 0, C: 0, D: 0 };
                 }
             }, 1000);
         }
@@ -218,6 +228,7 @@
 
         // Place Bet Logic
         function placeBet(card) {
+            let timeLeft = Number(localStorage.getItem("flipx_timer")) || 60;
             if (timeLeft <= 5) {
                 alert("Abhi betting band ho chuki hai!");
                 return;
@@ -299,7 +310,7 @@
             });
 
             localStorage.setItem("flipx_requests", JSON.stringify(requests));
-            alert("Deposit request submit ho gayi hai! Admin approval ka wait karein.");
+            alert("Deposit request submit ho gayi hai! Admin panel se approve karein.");
             
             document.getElementById("dep-amount").value = "";
             document.getElementById("dep-utr").value = "";
