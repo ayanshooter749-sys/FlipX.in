@@ -157,15 +157,30 @@
     </div>
 
     <script>
-        let periodNumber = 2026092201;
-        let totalBets = { A: 0, B: 0, C: 0, D: 0 };
-        let userBetsThisRound = { A: 0, B: 0, C: 0, D: 0 };
+        let periodNumber = Number(localStorage.getItem("flipx_period")) || 2026092201;
 
         function updateUI() {
             let savedBal = Number(localStorage.getItem("flipx_balance") || 0);
             document.getElementById("user-balance").innerText = savedBal;
             let userEmail = localStorage.getItem("flipx_user") || "7568556656";
             document.getElementById("user-email-display").innerText = "User: " + userEmail;
+            loadHistory();
+        }
+
+        function loadHistory() {
+            let historyList = JSON.parse(localStorage.getItem("flipx_history")) || [];
+            let historyBody = document.getElementById("history-body");
+
+            if (historyList.length === 0) {
+                historyBody.innerHTML = `<tr><td colspan="2" style="color: #64748b;">No history yet</td></tr>`;
+                return;
+            }
+
+            let html = "";
+            historyList.forEach(item => {
+                html += `<tr><td>${item.period}</td><td><strong style="color: #38bdf8;">Card ${item.winner}</strong></td></tr>`;
+            });
+            historyBody.innerHTML = html;
         }
 
         // Persistent Timer Logic
@@ -177,8 +192,11 @@
                     declareWinner();
                     timeLeft = 60;
                     periodNumber++;
-                    totalBets = { A: 0, B: 0, C: 0, D: 0 };
-                    userBetsThisRound = { A: 0, B: 0, C: 0, D: 0 };
+                    localStorage.setItem("flipx_period", periodNumber);
+                    
+                    // Reset bets in storage for new round
+                    localStorage.setItem("flipx_total_bets", JSON.stringify({ A: 0, B: 0, C: 0, D: 0 }));
+                    localStorage.setItem("flipx_user_bets", JSON.stringify({ A: 0, B: 0, C: 0, D: 0 }));
                 } else {
                     timeLeft--;
                 }
@@ -251,15 +269,25 @@
             localStorage.setItem("flipx_balance", newBal);
             updateUI();
 
+            // Get existing bets from localStorage
+            let totalBets = JSON.parse(localStorage.getItem("flipx_total_bets")) || { A: 0, B: 0, C: 0, D: 0 };
+            let userBetsThisRound = JSON.parse(localStorage.getItem("flipx_user_bets")) || { A: 0, B: 0, C: 0, D: 0 };
+
             totalBets[card] += betAmt;
             userBetsThisRound[card] += betAmt;
+
+            localStorage.setItem("flipx_total_bets", JSON.stringify(totalBets));
+            localStorage.setItem("flipx_user_bets", JSON.stringify(userBetsThisRound));
 
             alert(`Successfully placed ₹${betAmt} on Card ${card}!`);
             document.getElementById("bet-amount").value = "";
         }
 
-        // Auto Winner Engine
+        // Auto Winner Engine & History Saver
         function declareWinner() {
+            let totalBets = JSON.parse(localStorage.getItem("flipx_total_bets")) || { A: 0, B: 0, C: 0, D: 0 };
+            let userBetsThisRound = JSON.parse(localStorage.getItem("flipx_user_bets")) || { A: 0, B: 0, C: 0, D: 0 };
+
             let cards = ['A', 'B', 'C', 'D'];
             let minCard = cards.reduce((prev, curr) => totalBets[curr] < totalBets[prev] ? curr : prev);
             let winnerCard = minCard;
@@ -272,13 +300,13 @@
                 updateUI();
             }
 
-            let historyBody = document.getElementById("history-body");
-            if (historyBody.innerHTML.includes("No history yet")) {
-                historyBody.innerHTML = "";
-            }
+            // Save History to LocalStorage
+            let historyList = JSON.parse(localStorage.getItem("flipx_history")) || [];
+            historyList.unshift({ period: periodNumber, winner: winnerCard });
+            if (historyList.length > 10) historyList.pop();
+            localStorage.setItem("flipx_history", JSON.stringify(historyList));
 
-            let row = `<tr><td>${periodNumber}</td><td><strong style="color: #38bdf8;">Card ${winnerCard}</strong></td></tr>`;
-            historyBody.innerHTML = row + historyBody.innerHTML;
+            loadHistory();
         }
 
         // Deposit Request Submission
