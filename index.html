@@ -189,17 +189,16 @@
             historyBody.innerHTML = html;
         }
 
-        // Persistent Timer Logic
+        // Timer Logic with Fixed History Rendering
         function startTimer() {
             setInterval(() => {
-                let timeLeft = Number(localStorage.getItem("flipx_timer")) || 60;
+                let timeLeft = Number(localStorage.getItem("flipx_timer"));
                 
-                if (timeLeft <= 0) {
-                    declareWinner();
+                if (isNaN(timeLeft) || timeLeft <= 0 || timeLeft > 60) {
                     timeLeft = 60;
+                    declareWinner();
                     periodNumber++;
                     localStorage.setItem("flipx_period", periodNumber);
-                    
                     localStorage.setItem("flipx_total_bets", JSON.stringify({ A: 0, B: 0, C: 0, D: 0 }));
                     localStorage.setItem("flipx_user_bets", JSON.stringify({ A: 0, B: 0, C: 0, D: 0 }));
                 } else {
@@ -287,17 +286,15 @@
             document.getElementById("bet-amount").value = "";
         }
 
-        // Auto Winner Engine & Winnings Payout Fix
+        // Declare Winner & Save History Properly
         function declareWinner() {
             let totalBets = JSON.parse(localStorage.getItem("flipx_total_bets")) || { A: 0, B: 0, C: 0, D: 0 };
             let userBetsThisRound = JSON.parse(localStorage.getItem("flipx_user_bets")) || { A: 0, B: 0, C: 0, D: 0 };
 
             let cards = ['A', 'B', 'C', 'D'];
-            // Winner selection: jo card sabse kam total bets wala ho ya random fallback
             let minCard = cards.reduce((prev, curr) => totalBets[curr] < totalBets[prev] ? curr : prev);
             let winnerCard = minCard;
 
-            // Check user bet on winning card and credit 4x payout
             let userBetOnWinner = userBetsThisRound[winnerCard] || 0;
             if (userBetOnWinner > 0) {
                 let winnings = userBetOnWinner * 4;
@@ -306,7 +303,6 @@
                 localStorage.setItem("flipx_balance", finalBal);
             }
 
-            // Save History to LocalStorage
             let historyList = JSON.parse(localStorage.getItem("flipx_history")) || [];
             historyList.unshift({ period: periodNumber, winner: winnerCard });
             if (historyList.length > 10) historyList.pop();
@@ -349,14 +345,14 @@
             document.getElementById("qr-box").style.display = "none";
         }
 
-        // Withdrawal Request Submission (Deducts balance immediately)
+        // Withdrawal Request Submission
         function submitWithdrawalLocal() {
             let amount = Number(document.getElementById("wd-amount").value);
             let upi = document.getElementById("wd-upi").value.trim();
             let user = localStorage.getItem("flipx_user") || "7568556656";
             let currentBal = Number(localStorage.getItem("flipx_balance") || 5000);
 
-.           if (!amount || amount < 400 || amount > 1000) {
+            if (!amount || amount < 400 || amount > 1000) {
                 alert("Withdrawal limit ₹400 se kam aur ₹1000 se zyada nahi ho sakti!");
                 return;
             }
