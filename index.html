@@ -1,30 +1,26 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flipx.in - Earn Without Limit</title>
-    <!-- QR Code Generator Library CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root {
-            --cpg-primary: #7c3aed;
-            --cpg-secondary: #5b21b6;
-            --cpg-accent: #a855f7;
-            --cpg-bg: #faf5ff;
-            --cpg-text: #1e1b4b;
-            --cpg-light: #ede9fe;
-            --cpg-white: #ffffff;
-            --cpg-muted: #6b7280;
-            --cpg-success: #10b981;
-            --cpg-danger: #ef4444;
-            --cpg-shadow: 0 4px 24px rgba(124,58,237,0.15);
-            --cpg-radius: 16px;
-            --cpg-radius-sm: 10px;
+            --primary: #7c3aed;
+            --secondary: #5b21b6;
+            --bg: #faf5ff;
+            --text: #1e1b4b;
+            --light: #ede9fe;
+            --white: #ffffff;
+            --muted: #6b7280;
+            --success: #10b981;
+            --danger: #ef4444;
+            --shadow: 0 4px 24px rgba(124,58,237,0.15);
+            --radius: 16px;
         }
         body {
-            background-color: var(--cpg-bg);
-            color: var(--cpg-text);
+            background-color: var(--bg);
+            color: var(--text);
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 15px;
@@ -34,13 +30,12 @@
             margin: 0 auto;
         }
         .card-box {
-            background: var(--cpg-white);
+            background: var(--white);
             padding: 20px;
-            border-radius: var(--cpg-radius);
+            border-radius: var(--radius);
             margin-bottom: 15px;
-            box-shadow: var(--cpg-shadow);
-            box-sizing: border-box;
-            border: 1px solid var(--cpg-light);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--light);
         }
         .btn-grid {
             display: grid;
@@ -52,93 +47,66 @@
             padding: 15px;
             font-weight: bold;
             border: none;
-            border-radius: var(--cpg-radius-sm);
+            border-radius: 10px;
             color: white;
             cursor: pointer;
             font-size: 14px;
-            transition: opacity 0.2s;
         }
-        .btn-a { background-color: var(--cpg-danger); }
-        .btn-b { background-color: var(--cpg-success); }
-        .btn-c { background-color: var(--cpg-primary); }
+        .btn-a { background-color: var(--danger); }
+        .btn-b { background-color: var(--success); }
+        .btn-c { background-color: var(--primary); }
         .btn-d { background-color: #f59e0b; }
-        .game-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        .game-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         input {
             padding: 12px;
             width: 100%;
-            border-radius: var(--cpg-radius-sm);
+            border-radius: 10px;
             border: 1px solid #cbd5e1;
-            background: var(--cpg-white);
-            color: var(--cpg-text);
             margin-bottom: 12px;
             box-sizing: border-box;
             font-size: 14px;
         }
         .submit-btn {
-            background: var(--cpg-primary);
+            background: var(--primary);
             color: #fff;
             border: none;
             padding: 12px;
             font-weight: bold;
-            border-radius: var(--cpg-radius-sm);
+            border-radius: 10px;
             width: 100%;
             cursor: pointer;
             font-size: 14px;
         }
-        .submit-btn:hover {
-            background: var(--cpg-secondary);
-        }
-        .logout-btn {
-            background: var(--cpg-danger);
-            margin-top: 10px;
-        }
-        .withdraw-btn { background: var(--cpg-danger); }
-        .qr-container {
-            text-align: center;
-            background: #ffffff;
-            padding: 15px;
-            border-radius: var(--cpg-radius-sm);
-            margin-top: 10px;
-            margin-bottom: 10px;
-            display: none;
-            border: 1px solid var(--cpg-light);
-        }
+        .logout-btn { background: var(--danger); margin-top: 10px; }
+        .withdraw-btn { background: var(--danger); }
         .history-table {
             width: 100%;
             text-align: center;
             font-size: 13px;
-            color: var(--cpg-muted);
+            color: var(--muted);
             border-collapse: collapse;
         }
         .history-table th, .history-table td {
             padding: 10px;
-            border-bottom: 1px solid var(--cpg-light);
+            border-bottom: 1px solid var(--light);
         }
-        .history-table th {
-            color: var(--cpg-primary);
-        }
+        .history-table th { color: var(--primary); }
         .auth-switch {
             text-align: center;
             font-size: 13px;
-            color: var(--cpg-primary);
+            color: var(--primary);
             cursor: pointer;
             margin-top: 10px;
             font-weight: bold;
         }
-        h2, h3 {
-            color: var(--cpg-text);
-            margin-top: 0;
-        }
+        h2, h3 { color: var(--text); margin-top: 0; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <!-- AUTH SECTION (Login / Signup) -->
-        <div id="auth-section" class="card-box" style="display: none;">
+        <!-- AUTH SECTION -->
+        <div id="auth-section" class="card-box">
             <h2 id="auth-title" style="text-align: center;">🔐 Login to FlipX</h2>
             <input type="email" id="auth-email" placeholder="Enter Email Address">
             <input type="password" id="auth-password" placeholder="Enter Password">
@@ -148,46 +116,34 @@
 
         <!-- MAIN GAME DASHBOARD -->
         <div id="game-section" style="display: none;">
-            <!-- Balance & User Info Header -->
             <div class="card-box" style="text-align: center;">
                 <h3 style="margin-bottom: 5px;">Balance: ₹<span id="user-balance">0</span></h3>
-                <p style="font-size: 12px; color: var(--cpg-muted); margin: 0;" id="user-email-display">User: </p>
-                <p style="font-size: 14px; color: var(--cpg-primary); margin-top: 8px; font-weight: bold;">
+                <p style="font-size: 12px; color: var(--muted); margin: 0;" id="user-email-display">User: </p>
+                <p style="font-size: 14px; color: var(--primary); margin-top: 8px; font-weight: bold;">
                     Next Result In: <span id="timer" style="font-size: 18px; font-weight: 800;">60</span>s
-                    <br><span id="status-text" style="color: var(--cpg-success); font-size: 12px;">(Betting Open)</span>
+                    <br><span id="status-text" style="color: var(--success); font-size: 12px;">(Betting Open)</span>
                 </p>
                 <button class="submit-btn logout-btn" onclick="logoutUser()">Logout</button>
             </div>
 
-            <!-- Betting Input & Game Buttons -->
             <div class="card-box">
                 <h3 style="font-size: 15px;">🎮 Place Your Bet</h3>
                 <input type="number" id="bet-amount" placeholder="Enter Bet Amount (₹)">
-                
                 <div class="btn-grid" style="margin-top: 10px; margin-bottom: 0;">
-                    <button class="game-btn btn-a" id="btn-A" onclick="placeBet('A')">Maruti<br><span style="font-size:11px;">4x Payout</span></button>
-                    <button class="game-btn btn-b" id="btn-B" onclick="placeBet('B')">Spider Man<br><span style="font-size:11px;">4x Payout</span></button>
-                    <button class="game-btn btn-c" id="btn-C" onclick="placeBet('C')">Super Man<br><span style="font-size:11px;">4x Payout</span></button>
-                    <button class="game-btn btn-d" id="btn-D" onclick="placeBet('D')">Krrish<br><span style="font-size:11px;">4x Payout</span></button>
+                    <button class="game-btn btn-a" onclick="placeBet('A')">Maruti<br><span style="font-size:11px;">4x Payout</span></button>
+                    <button class="game-btn btn-b" onclick="placeBet('B')">Spider Man<br><span style="font-size:11px;">4x Payout</span></button>
+                    <button class="game-btn btn-c" onclick="placeBet('C')">Super Man<br><span style="font-size:11px;">4x Payout</span></button>
+                    <button class="game-btn btn-d" onclick="placeBet('D')">Krrish<br><span style="font-size:11px;">4x Payout</span></button>
                 </div>
             </div>
 
-            <!-- Deposit Section with Auto QR -->
             <div class="card-box">
                 <h3 style="font-size: 15px;">💳 Deposit Money (Min ₹30)</h3>
-                <input type="number" id="dep-amount" placeholder="Enter Amount (Min ₹30)" oninput="autoGenerateQR()">
-
-                <!-- Auto QR Box -->
-                <div id="qr-box" class="qr-container">
-                    <p style="color: #000; font-size: 13px; margin: 0 0 10px 0; font-weight: bold;">Scan & Pay via any UPI App</p>
-                    <div id="qrcode" style="display: inline-block;"></div>
-                </div>
-
-                <input type="text" id="dep-utr" placeholder="Enter 12-Digit UTR Number" maxlength="12" style="margin-top: 10px;">
+                <input type="number" id="dep-amount" placeholder="Enter Amount (Min ₹30)">
+                <input type="text" id="dep-utr" placeholder="Enter 12-Digit UTR Number" maxlength="12">
                 <button class="submit-btn" onclick="submitDepositLocal()">Submit Deposit Request</button>
             </div>
 
-            <!-- Withdrawal Section -->
             <div class="card-box">
                 <h3 style="font-size: 15px;">💸 Withdraw Money (₹400 - ₹1000)</h3>
                 <input type="number" id="wd-amount" placeholder="Withdraw Amount (₹400 to ₹1000)">
@@ -195,7 +151,6 @@
                 <button class="submit-btn withdraw-btn" onclick="submitWithdrawalLocal()">Request Withdrawal</button>
             </div>
 
-            <!-- Live Game History Section -->
             <div class="card-box">
                 <h3 style="text-align: center; font-size: 15px;">Live Game History</h3>
                 <table class="history-table">
@@ -206,7 +161,7 @@
                         </tr>
                     </thead>
                     <tbody id="history-body">
-                        <tr><td colspan="2" style="color: var(--cpg-muted);">No history yet</td></tr>
+                        <tr><td colspan="2" style="color: var(--muted);">No history yet</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -273,10 +228,7 @@
                     alert("Yeh email pehle se registered hai! Login karein.");
                     return;
                 }
-                users[email] = {
-                    password: pass,
-                    balance: 5000
-                };
+                users[email] = { password: pass, balance: 5000 };
                 localStorage.setItem("flipx_users", JSON.stringify(users));
                 localStorage.setItem("flipx_logged_in_user", email);
                 alert("Registration Successful! ₹5000 bonus added.");
@@ -305,14 +257,14 @@
             let historyBody = document.getElementById("history-body");
 
             if (!historyList || historyList.length === 0) {
-                historyBody.innerHTML = '<tr><td colspan="2" style="color: var(--cpg-muted);">No history yet</td></tr>';
+                historyBody.innerHTML = '<tr><td colspan="2" style="color: var(--muted);">No history yet</td></tr>';
                 return;
             }
 
             let cardNames = { 'A': 'Maruti', 'B': 'Spider Man', 'C': 'Super Man', 'D': 'Krrish' };
             let html = "";
             historyList.forEach(item => {
-                html += '<tr><td>' + item.period + '</td><td><strong style="color: var(--cpg-primary);">' + cardNames[item.winner] + '</strong></td></tr>';
+                html += '<tr><td>' + item.period + '</td><td><strong style="color: var(--primary);">' + cardNames[item.winner] + '</strong></td></tr>';
             });
             historyBody.innerHTML = html;
         }
@@ -340,39 +292,15 @@
                 if (statusText) {
                     if (timeLeft <= 5) {
                         statusText.innerText = "(Betting Closed)";
-                        statusText.style.color = "var(--cpg-danger)";
+                        statusText.style.color = "var(--danger)";
                         buttons.forEach(btn => btn.disabled = true);
                     } else {
                         statusText.innerText = "(Betting Open)";
-                        statusText.style.color = "var(--cpg-success)";
+                        statusText.style.color = "var(--success)";
                         buttons.forEach(btn => btn.disabled = false);
                     }
                 }
             }, 1000);
-        }
-
-        function autoGenerateQR() {
-            let amount = Number(document.getElementById("dep-amount").value);
-            let qrBox = document.getElementById("qr-box");
-            let qrDiv = document.getElementById("qrcode");
-
-            if (!amount || amount < 30) {
-                qrBox.style.display = "none";
-                qrDiv.innerHTML = "";
-                return;
-            }
-
-            let upiId = "7568556656@mbk";
-            let upiString = "upi://pay?pa=" + upiId + "&pn=FlipX&am=" + amount + "&cu=INR";
-            
-            qrDiv.innerHTML = "";
-            qrBox.style.display = "block";
-
-            new QRCode(qrDiv, {
-                text: upiString,
-                width: 150,
-                height: 150
-            });
         }
 
         function placeBet(card) {
@@ -470,24 +398,49 @@
             }
 
             let requests = JSON.parse(localStorage.getItem("flipx_requests")) || [];
-            requests.push({
-                id: Date.now(),
-                type: "Deposit",
-                user: email,
-                amount: amount,
-                detail: utr,
-                status: "Pending"
-            });
+            requests.push({ id: Date.now(), type: "Deposit", user: email, amount: amount, detail: utr, status: "Pending" });
 
             localStorage.setItem("flipx_requests", JSON.stringify(requests));
             alert("Deposit request submit ho gayi hai!");
-            
             document.getElementById("dep-amount").value = "";
             document.getElementById("dep-utr").value = "";
-            document.getElementById("qr-box").style.display = "none";
         }
 
         function submitWithdrawalLocal() {
-            let amount = Number(document.getElementById("wd-amount").value);
+            let amount = Number(document.getElementById("nd-amount") ? document.getElementById("nd-amount").value : document.getElementById("wd-amount").value);
             let upi = document.getElementById("wd-upi").value.trim();
-            let email = localStora
+            let email = localStorage.getItem("flipx_logged_in_user");
+            let users = JSON.parse(localStorage.getItem("flipx_users")) || {};
+            let currentBal = users[email] ? users[email].balance : 0;
+
+            if (!amount || amount < 400 || amount > 1000) {
+                alert("Withdrawal limit ₹400 se kam aur ₹1000 se zyada nahi ho sakti!");
+                return;
+            }
+
+            if (!upi) {
+                alert("Kripya apni UPI ID dalein!");
+                return;
+            }
+
+            if (amount > currentBal) {
+                alert("Aapka account balance kam hai!");
+                return;
+            }
+
+            users[email].balance = currentBal - amount;
+            localStorage.setItem("flipx_users", JSON.stringify(users));
+            updateUI();
+
+            let requests = JSON.parse(localStorage.getItem("flipx_requests")) || [];
+            requests.push({ id: Date.now(), type: "Withdrawal", user: email, amount: amount, detail: upi, status: "Pending" });
+
+            localStorage.setItem("flipx_requests", JSON.stringify(requests));
+            alert("Withdrawal request successfully submit ho gayi hai!");
+            document.getElementById("wd-amount").value = "";
+            document.getElementById("wd-upi").value = "";
+        }
+    </script>
+</body>
+</html>
+
