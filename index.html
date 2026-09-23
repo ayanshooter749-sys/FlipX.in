@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -228,10 +228,11 @@
                     alert("Yeh email pehle se registered hai! Login karein.");
                     return;
                 }
-                users[email] = { password: pass, balance: 5000 };
+                // Balance set to 0 on registration
+                users[email] = { password: pass, balance: 0, hasPlayed: false };
                 localStorage.setItem("flipx_users", JSON.stringify(users));
                 localStorage.setItem("flipx_logged_in_user", email);
-                alert("Registration Successful! ₹5000 bonus added.");
+                alert("Registration Successful!");
                 location.reload();
             }
         }
@@ -323,11 +324,12 @@
             }
 
             if (betAmt > currentBal) {
-                alert("Aapke account mein insufficient balance hai!");
+                alert("Aapke account mein insufficient balance hai! Pehle deposit karein.");
                 return;
             }
 
             users[email].balance = currentBal - betAmt;
+            users[email].hasPlayed = true; 
             localStorage.setItem("flipx_users", JSON.stringify(users));
             updateUI();
 
@@ -393,7 +395,7 @@
             }
 
             if (utr.length !== 12 || isNaN(utr)) {
-                alert("Kripya valid 12-digit UTR number dalein!");
+                alert("❌ Error: UTR number theek 12 digits ka hona chahiye!");
                 return;
             }
 
@@ -407,10 +409,17 @@
         }
 
         function submitWithdrawalLocal() {
-            let amount = Number(document.getElementById("nd-amount") ? document.getElementById("nd-amount").value : document.getElementById("wd-amount").value);
+            let amount = Number(document.getElementById("wd-amount").value);
             let upi = document.getElementById("wd-upi").value.trim();
             let email = localStorage.getItem("flipx_logged_in_user");
             let users = JSON.parse(localStorage.getItem("flipx_users")) || {};
+            
+            let userHasPlayed = users[email] ? users[email].hasPlayed : false;
+            if (!userHasPlayed) {
+                alert("❌ Error: Aap bina game khele balance withdraw nahi kar sakte! Pehle kam se kam ek baar bet lagayein.");
+                return;
+            }
+
             let currentBal = users[email] ? users[email].balance : 0;
 
             if (!amount || amount < 400 || amount > 1000) {
@@ -443,4 +452,3 @@
     </script>
 </body>
 </html>
-
