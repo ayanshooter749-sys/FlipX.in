@@ -160,7 +160,7 @@
         let periodNumber = Number(localStorage.getItem("flipx_period")) || 2026092201;
 
         function updateUI() {
-            let savedBal = Number(localStorage.getItem("flipx_balance") || 0);
+            let savedBal = Number(localStorage.getItem("flipx_balance") || 5000);
             document.getElementById("user-balance").innerText = savedBal;
             let userEmail = localStorage.getItem("flipx_user") || "7568556656";
             document.getElementById("user-email-display").innerText = "User: " + userEmail;
@@ -171,7 +171,7 @@
             let historyList = JSON.parse(localStorage.getItem("flipx_history")) || [];
             let historyBody = document.getElementById("history-body");
 
-            if (historyList.length === 0) {
+            if (!historyList || historyList.length === 0) {
                 historyBody.innerHTML = `<tr><td colspan="2" style="color: #64748b;">No history yet</td></tr>`;
                 return;
             }
@@ -194,7 +194,6 @@
                     periodNumber++;
                     localStorage.setItem("flipx_period", periodNumber);
                     
-                    // Reset bets in storage for new round
                     localStorage.setItem("flipx_total_bets", JSON.stringify({ A: 0, B: 0, C: 0, D: 0 }));
                     localStorage.setItem("flipx_user_bets", JSON.stringify({ A: 0, B: 0, C: 0, D: 0 }));
                 } else {
@@ -253,7 +252,7 @@
             }
 
             let betAmt = Number(document.getElementById("bet-amount").value);
-            let currentBal = Number(localStorage.getItem("flipx_balance") || 0);
+            let currentBal = Number(localStorage.getItem("flipx_balance") || 5000);
 
             if (!betAmt || betAmt <= 0) {
                 alert("Kripya valid bet amount dalein!");
@@ -269,7 +268,6 @@
             localStorage.setItem("flipx_balance", newBal);
             updateUI();
 
-            // Get existing bets from localStorage
             let totalBets = JSON.parse(localStorage.getItem("flipx_total_bets")) || { A: 0, B: 0, C: 0, D: 0 };
             let userBetsThisRound = JSON.parse(localStorage.getItem("flipx_user_bets")) || { A: 0, B: 0, C: 0, D: 0 };
 
@@ -294,10 +292,9 @@
 
             if (userBetsThisRound[winnerCard] > 0) {
                 let winnings = userBetsThisRound[winnerCard] * 4;
-                let currentBal = Number(localStorage.getItem("flipx_balance") || 0);
+                let currentBal = Number(localStorage.getItem("flipx_balance") || 5000);
                 let finalBal = currentBal + winnings;
                 localStorage.setItem("flipx_balance", finalBal);
-                updateUI();
             }
 
             // Save History to LocalStorage
@@ -306,7 +303,8 @@
             if (historyList.length > 10) historyList.pop();
             localStorage.setItem("flipx_history", JSON.stringify(historyList));
 
-            loadHistory();
+            // Screen par balance aur history update karne ke liye call kiya
+            updateUI();
         }
 
         // Deposit Request Submission
@@ -348,7 +346,7 @@
             let amount = Number(document.getElementById("wd-amount").value);
             let upi = document.getElementById("wd-upi").value.trim();
             let user = localStorage.getItem("flipx_user") || "7568556656";
-            let currentBal = Number(localStorage.getItem("flipx_balance") || 0);
+            let currentBal = Number(localStorage.getItem("flipx_balance") || 5000);
 
             if (!amount || amount < 400 || amount > 1000) {
                 alert("Withdrawal limit ₹400 se kam aur ₹1000 se zyada nahi ho sakti!");
