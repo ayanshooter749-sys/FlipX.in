@@ -130,6 +130,7 @@
         }
         h2, h3 {
             color: var(--cpg-text);
+            margin-top: 0;
         }
     </style>
 </head>
@@ -138,7 +139,7 @@
     <div class="container">
         <!-- AUTH SECTION (Login / Signup) -->
         <div id="auth-section" class="card-box" style="display: none;">
-            <h2 id="auth-title" style="text-align: center; margin-top: 0;">🔐 Login to FlipX</h2>
+            <h2 id="auth-title" style="text-align: center;">🔐 Login to FlipX</h2>
             <input type="email" id="auth-email" placeholder="Enter Email Address">
             <input type="password" id="auth-password" placeholder="Enter Password">
             <button class="submit-btn" id="auth-btn" onclick="handleAuth()">Login</button>
@@ -149,7 +150,7 @@
         <div id="game-section" style="display: none;">
             <!-- Balance & User Info Header -->
             <div class="card-box" style="text-align: center;">
-                <h3 style="margin: 0 0 5px 0;">Balance: ₹<span id="user-balance">0</span></h3>
+                <h3 style="margin-bottom: 5px;">Balance: ₹<span id="user-balance">0</span></h3>
                 <p style="font-size: 12px; color: var(--cpg-muted); margin: 0;" id="user-email-display">User: </p>
                 <p style="font-size: 14px; color: var(--cpg-primary); margin-top: 8px; font-weight: bold;">
                     Next Result In: <span id="timer" style="font-size: 18px; font-weight: 800;">60</span>s
@@ -160,7 +161,7 @@
 
             <!-- Betting Input & Game Buttons -->
             <div class="card-box">
-                <h3 style="margin-top: 0; font-size: 15px;">🎮 Place Your Bet</h3>
+                <h3 style="font-size: 15px;">🎮 Place Your Bet</h3>
                 <input type="number" id="bet-amount" placeholder="Enter Bet Amount (₹)">
                 
                 <div class="btn-grid" style="margin-top: 10px; margin-bottom: 0;">
@@ -173,7 +174,7 @@
 
             <!-- Deposit Section with Auto QR -->
             <div class="card-box">
-                <h3 style="margin-top: 0; font-size: 15px;">💳 Deposit Money (Min ₹30)</h3>
+                <h3 style="font-size: 15px;">💳 Deposit Money (Min ₹30)</h3>
                 <input type="number" id="dep-amount" placeholder="Enter Amount (Min ₹30)" oninput="autoGenerateQR()">
 
                 <!-- Auto QR Box -->
@@ -188,7 +189,7 @@
 
             <!-- Withdrawal Section -->
             <div class="card-box">
-                <h3 style="margin-top: 0; font-size: 15px;">💸 Withdraw Money (₹400 - ₹1000)</h3>
+                <h3 style="font-size: 15px;">💸 Withdraw Money (₹400 - ₹1000)</h3>
                 <input type="number" id="wd-amount" placeholder="Withdraw Amount (₹400 to ₹1000)">
                 <input type="text" id="wd-upi" placeholder="Enter UPI ID (e.g. okaxis)">
                 <button class="submit-btn withdraw-btn" onclick="submitWithdrawalLocal()">Request Withdrawal</button>
@@ -196,7 +197,7 @@
 
             <!-- Live Game History Section -->
             <div class="card-box">
-                <h3 style="margin-top: 0; text-align: center; font-size: 15px;">Live Game History</h3>
+                <h3 style="text-align: center; font-size: 15px;">Live Game History</h3>
                 <table class="history-table">
                     <thead>
                         <tr>
@@ -216,7 +217,7 @@
         let isLoginMode = true;
         let periodNumber = Number(localStorage.getItem("flipx_period")) || 2026092201;
         let isProcessingWinner = false;
-        const TOTAL_TIME = 60; // 60 Seconds timer
+        const TOTAL_TIME = 60;
 
         window.onload = function() {
             let loggedUser = localStorage.getItem("flipx_logged_in_user");
@@ -304,14 +305,14 @@
             let historyBody = document.getElementById("history-body");
 
             if (!historyList || historyList.length === 0) {
-                historyBody.innerHTML = `<tr><td colspan="2" style="color: var(--cpg-muted);">No history yet</td></tr>`;
+                historyBody.innerHTML = '<tr><td colspan="2" style="color: var(--cpg-muted);">No history yet</td></tr>';
                 return;
             }
 
             let cardNames = { 'A': 'Maruti', 'B': 'Spider Man', 'C': 'Super Man', 'D': 'Krrish' };
             let html = "";
             historyList.forEach(item => {
-                html += `<tr><td>${item.period}</td><td><strong style="color: var(--cpg-primary);">${cardNames[item.winner]}</strong></td></tr>`;
+                html += '<tr><td>' + item.period + '</td><td><strong style="color: var(--cpg-primary);">' + cardNames[item.winner] + '</strong></td></tr>';
             });
             historyBody.innerHTML = html;
         }
@@ -337,7 +338,7 @@
                 let buttons = document.querySelectorAll(".game-btn");
 
                 if (statusText) {
-                    if (timeLeft <= 5) { // Last 5 seconds betting closed
+                    if (timeLeft <= 5) {
                         statusText.innerText = "(Betting Closed)";
                         statusText.style.color = "var(--cpg-danger)";
                         buttons.forEach(btn => btn.disabled = true);
@@ -362,7 +363,7 @@
             }
 
             let upiId = "7568556656@mbk";
-            let upiString = `upi://pay?pa=${upiId}&pn=FlipX&am=${amount}&cu=INR`;
+            let upiString = "upi://pay?pa=" + upiId + "&pn=FlipX&am=" + amount + "&cu=INR";
             
             qrDiv.innerHTML = "";
             qrBox.style.display = "block";
@@ -411,7 +412,7 @@
             localStorage.setItem("flipx_total_bets", JSON.stringify(totalBets));
             localStorage.setItem("flipx_user_bets", JSON.stringify(userBetsThisRound));
 
-            alert(`Successfully placed ₹${betAmt} on ${cardNames[card]}!`);
+            alert("Successfully placed ₹" + betAmt + " on " + cardNames[card] + "!");
             document.getElementById("bet-amount").value = "";
         }
 
@@ -488,4 +489,5 @@
 
         function submitWithdrawalLocal() {
             let amount = Number(document.getElementById("wd-amount").value);
-            let upi = document.get
+            let upi = document.getElementById("wd-upi").value.trim();
+            let email = localStora
