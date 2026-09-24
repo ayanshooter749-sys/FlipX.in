@@ -228,7 +228,6 @@
                     alert("Yeh email pehle se registered hai! Login karein.");
                     return;
                 }
-                // Balance set to 0 on registration
                 users[email] = { password: pass, balance: 0, hasPlayed: false };
                 localStorage.setItem("flipx_users", JSON.stringify(users));
                 localStorage.setItem("flipx_logged_in_user", email);
@@ -329,7 +328,7 @@
             }
 
             users[email].balance = currentBal - betAmt;
-            users[email].hasPlayed = true; 
+            users[email].hasPlayed = true;
             localStorage.setItem("flipx_users", JSON.stringify(users));
             updateUI();
 
