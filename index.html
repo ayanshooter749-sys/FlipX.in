@@ -146,6 +146,7 @@
 
             <div class="card-box">
                 <h3 style="font-size: 15px;">💸 Withdraw Money (₹400 - ₹1000)</h3>
+                <p style="font-size: 11px; color: var(--muted); margin-bottom: 8px;">* 1% Commission/Fee applicable on withdrawal</p>
                 <input type="number" id="wd-amount" placeholder="Withdraw Amount (₹400 to ₹1000)">
                 <input type="text" id="wd-upi" placeholder="Enter UPI ID (e.g. okaxis)">
                 <button class="submit-btn withdraw-btn" onclick="submitWithdrawalLocal()">Request Withdrawal</button>
@@ -436,15 +437,28 @@
                 return;
             }
 
+            // 1% Commission Calculation
+            let commission = amount * 0.01;
+            let finalPayout = amount - commission;
+
             users[email].balance = currentBal - amount;
             localStorage.setItem("flipx_users", JSON.stringify(users));
             updateUI();
 
             let requests = JSON.parse(localStorage.getItem("flipx_requests")) || [];
-            requests.push({ id: Date.now(), type: "Withdrawal", user: email, amount: amount, detail: upi, status: "Pending" });
+            requests.push({ 
+                id: Date.now(), 
+                type: "Withdrawal", 
+                user: email, 
+                amount: amount, 
+                commission: commission,
+                payout: finalPayout,
+                detail: upi, 
+                status: "Pending" 
+            });
 
             localStorage.setItem("flipx_requests", JSON.stringify(requests));
-            alert("Withdrawal request successfully submit ho gayi hai!");
+            alert("Withdrawal request submit ho gayi! (1% commission deduct hone ke baad final payout ₹" + finalPayout + " banega)");
             document.getElementById("wd-amount").value = "";
             document.getElementById("wd-upi").value = "";
         }
