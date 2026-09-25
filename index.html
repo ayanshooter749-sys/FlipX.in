@@ -1,207 +1,76 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="google-site-verification" content="YOUR_VERIFICATION_CODE_HERE">
-    <title>FlipX - Prediction Game</title>
+    <title>FlipX - Easy Admin Panel</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: #0f172a; color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { width: 100%; max-width: 400px; background: #1e293b; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-        .hidden { display: none !important; }
-        h2 { text-align: center; margin-bottom: 20px; color: #38bdf8; }
-        input, select { width: 100%; padding: 12px; margin: 10px 0; background: #0f172a; border: 1px solid #334155; color: #fff; border-radius: 8px; font-size: 16px; }
-        button { width: 100%; padding: 12px; background: #2563eb; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        button:hover { background: #1d4ed8; }
-        .switch-text { text-align: center; margin-top: 15px; font-size: 14px; color: #94a3b8; cursor: pointer; }
-        .switch-text span { color: #38bdf8; text-decoration: underline; }
-        .dashboard-header { display: flex; justify-content: space-between; align-items: center; background: #0f172a; padding: 12px; border-radius: 8px; margin-bottom: 15px; }
-        .box { background: #334155; padding: 15px; border-radius: 8px; text-align: center; margin: 10px 0; }
-        .timer { font-size: 24px; font-weight: bold; color: #facc15; text-align: center; margin: 10px 0; }
-        .btn-group { display: flex; gap: 10px; }
-        .btn-green { background: #16a34a; }
-        .btn-red { background: #dc2626; }
-        .logout-btn { background: #64748b; margin-top: 20px; }
+        body { background: #0f172a; color: #fff; font-family: Arial, sans-serif; padding: 20px; }
+        h2 { color: #38bdf8; text-align: center; }
+        .req-card { background: #1e293b; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid #f59e0b; }
+        button { padding: 8px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .btn-approve { background: #22c55e; color: #fff; margin-right: 5px; }
+        .btn-reject { background: #ef4444; color: #fff; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <!-- AUTH SECTION (LOGIN / SIGNUP) -->
-    <div id="authSection">
-        <h2 id="authTitle">FlipX Login</h2>
-        <input type="tel" id="authPhone" placeholder="Mobile Number" maxlength="10">
-        <input type="password" id="authPassword" placeholder="Password">
-        <button id="authBtn" onclick="handleAuth()">Login</button>
-        <div class="switch-text" id="switchText" onclick="toggleAuthMode()">Account nahi hai? <span>Register karein</span></div>
-    </div>
+    <h2>🛠️ FlipX Admin Panel</h2>
+    <div id="admin-list">Loading...</div>
 
-    <!-- MAIN GAME DASHBOARD -->
-    <div id="gameSection" class="hidden">
-        <div class="dashboard-header">
-            <div>📞 <span id="userPhoneDisplay"></span></div>
-            <div>💰 ₹<span id="userBalance">0</span></div>
-        </div>
+    <script>
+        function loadRequests() {
+            let listDiv = document.getElementById("admin-list");
+            let requests = JSON.parse(localStorage.getItem("flipx_requests")) || [];
+            
+            // Sirf Pending requests filter karein
+            let pending = requests.filter(r => r.status === "Pending");
 
-        <div class="timer">Time Left: <span id="timerCount">60</span>s</div>
-
-        <div class="box">
-            <h3>Prediction Game (4x Payout)</h3>
-            <p>Color choose karein aur jeetein!</p>
-            <div class="btn-group">
-                <button class="btn-green" onclick="placeBet('Green')">Green</button>
-                <button class="btn-red" onclick="placeBet('Red')">Red</button>
-            </div>
-        </div>
-
-        <div class="box">
-            <h4>Deposit / Withdrawal</h4>
-            <input type="number" id="transAmount" placeholder="Amount (Min ₹30)">
-            <input type="text" id="transUTR" placeholder="12 Digit UTR / UPI ID">
-            <button onclick="requestDeposit()">Deposit Request</button>
-            <button onclick="requestWithdrawal()" class="btn-red">Withdrawal Request</button>
-        </div>
-
-        <button class="logout-btn" onclick="logout()">Logout</button>
-    </div>
-</div>
-
-<script>
-    let isLoginMode = true;
-
-    function toggleAuthMode() {
-        isLoginMode = !isLoginMode;
-        document.getElementById('authTitle').innerText = isLoginMode ? "FlipX Login" : "FlipX Register";
-        document.getElementById('authBtn').innerText = isLoginMode ? "Login" : "Register";
-        document.getElementById('switchText').innerHTML = isLoginMode ? "Account nahi hai? <span>Register karein</span>" : "Pehle se account hai? <span>Login karein</span>";
-    }
-
-    function handleAuth() {
-        let phone = document.getElementById('authPhone').value.trim();
-        let password = document.getElementById('authPassword').value.trim();
-
-        if(phone.length !== 10 || password === "") {
-            alert("Kripya sahi 10-digit mobile number aur password bharein!");
-            return;
-        }
-
-        let users = JSON.parse(localStorage.getItem('flipx_users')) || {};
-
-        if(!isLoginMode) {
-            // Register
-            if(users[phone]) {
-                alert("Yeh mobile number pehle se registered hai! Login karein.");
+            listDiv.innerHTML = "";
+            if (pending.length === 0) {
+                listDiv.innerHTML = "<p style='text-align: center; color: #94a3b8;'>Koi pending request nahi hai.</p>";
                 return;
             }
-            users[phone] = { password: password, balance: 0, hasBet: false };
-            localStorage.setItem('flipx_users', JSON.stringify(users));
-            alert("Registration successful! Ab login karein.");
-            toggleAuthMode();
-        } else {
-            // Login
-            if(!users[phone] || users[phone].password !== password) {
-                alert("Galat mobile number ya password!");
-                return;
+
+            pending.forEach(req => {
+                let card = document.createElement("div");
+                card.className = "req-card";
+                card.innerHTML = `
+                    <div>
+                        <strong>User:</strong> ${req.user} <br>
+                        <strong>Type:</strong> ${req.type} <br>
+                        <strong>Amount:</strong> ₹${req.amount} <br>
+                        <strong>UTR:</strong> ${req.detail}
+                    </div>
+                    <div>
+                        <button class="btn-approve" onclick="updateReq(${req.id}, 'Approved', ${req.amount}, '${req.user}')">Approve</button>
+                        <button class="btn-reject" onclick="updateReq(${req.id}, 'Rejected', 0, '')">Reject</button>
+                    </div>
+                `;
+                listDiv.appendChild(card);
+            });
+        }
+
+        function updateReq(id, status, amount, username) {
+            let requests = JSON.parse(localStorage.getItem("flipx_requests")) || [];
+            let req = requests.find(r => r.id === id);
+            if (req) {
+                req.status = status;
+                localStorage.setItem("flipx_requests", JSON.stringify(requests));
+
+                // Agar Approve hua toh user ke balance mein paise add kar do
+                if (status === "Approved" && amount > 0) {
+                    let currentBal = Number(localStorage.getItem("flipx_balance") || 0);
+                    localStorage.setItem("flipx_balance", currentBal + amount);
+                    alert(`Request Approved! ₹${amount} user ke account mein add ho gaye.`);
+                } else {
+                    alert(`Request ${status} kar di gayi hai.`);
+                }
+                loadRequests();
             }
-            localStorage.setItem('flipx_current_user', phone);
-            loadDashboard();
-        }
-    }
-
-    function loadDashboard() {
-        let phone = localStorage.getItem('flipx_current_user');
-        if(!phone) return;
-
-        let users = JSON.parse(localStorage.getItem('flipx_users')) || {};
-        let user = users[phone];
-
-        document.getElementById('authSection').classList.add('hidden');
-        document.getElementById('gameSection').classList.remove('hidden');
-        document.getElementById('userPhoneDisplay').innerText = phone;
-        document.getElementById('userBalance').innerText = user.balance;
-    }
-
-    function logout() {
-        localStorage.removeItem('flipx_current_user');
-        document.getElementById('gameSection').classList.add('hidden');
-        document.getElementById('authSection').classList.remove('hidden');
-    }
-
-    function placeBet(color) {
-        let phone = localStorage.getItem('flipx_current_user');
-        let users = JSON.parse(localStorage.getItem('flipx_users')) || {};
-        let user = users[phone];
-
-        let betAmount = prompt("Kitne rupaye ki bet lagani hai?");
-        betAmount = parseInt(betAmount);
-
-        if(isNaN(betAmount) || betAmount <= 0) {
-            alert("Aamanya amount!");
-            return;
         }
 
-        if(user.balance < betAmount) {
-            alert("Aapka balance kam hai! Pehle deposit karein.");
-            return;
-        }
-
-        user.balance -= betAmount;
-        user.hasBet = true; // Anti-fraud rule active
-        users[phone] = user;
-        localStorage.setItem('flipx_users', JSON.stringify(users));
-        loadDashboard();
-
-        alert(`Aapne ₹${betAmount} ki bet ${color} par lagayi hai! Result thodi der mein aayega.`);
-    }
-
-    function requestDeposit() {
-        let phone = localStorage.getItem('flipx_current_user');
-        let amount = document.getElementById('transAmount').value;
-        let utr = document.getElementById('transUTR').value;
-
-        if(!amount || !utr) {
-            alert("Amount aur UTR dono bharein!");
-            return;
-        }
-
-        let requests = JSON.parse(localStorage.getItem('flipx_requests')) || [];
-        requests.push({ type: 'Deposit', phone: phone, amount: amount, utr: utr, time: new Date().toLocaleString() });
-        localStorage.setItem('flipx_requests', JSON.stringify(requests));
-        alert("Deposit request admin ko bhej di gayi hai!");
-    }
-
-    function requestWithdrawal() {
-        let phone = localStorage.getItem('flipx_current_user');
-        let users = JSON.parse(localStorage.getItem('flipx_users')) || {};
-        let user = users[phone];
-
-        if(!user.hasBet) {
-            alert("Rule ke mutabiq withdrawal karne se pehle kam se kam 1 baar game/bet khelna anivarya hai!");
-            return;
-        }
-
-        let amount = document.getElementById('transAmount').value;
-        let upi = document.getElementById('transUTR').value;
-
-        if(!amount || !upi) {
-            alert("Amount aur UPI ID bharein!");
-            return;
-        }
-
-        let requests = JSON.parse(localStorage.getItem('flipx_requests')) || [];
-        requests.push({ type: 'Withdrawal', phone: phone, amount: amount, upi: upi, time: new Date().toLocaleString() });
-        localStorage.setItem('flipx_requests', JSON.stringify(requests));
-        alert("Withdrawal request bhej di gayi hai (1% commission deduct hoga)!");
-    }
-
-    // Auto-login check on page load
-    window.onload = function() {
-        if(localStorage.getItem('flipx_current_user')) {
-            loadDashboard();
-        }
-    }
-</script>
-
+        loadRequests();
+    </script>
 </body>
 </html>
